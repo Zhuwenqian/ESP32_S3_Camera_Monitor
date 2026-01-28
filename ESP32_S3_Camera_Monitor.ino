@@ -1,6 +1,6 @@
 /**********************************************************************
   Filename    : Camera Web Server
-  Description : The camera images captured by the ESP32S3 are displayed on the web page.
+  Description : The camera images captured by the ESP32S3 are displayed on web page.
                 支持功能：
                 1. Web端实时视频流显示
                 2. Web端控制拍照并保存到SD卡
@@ -12,8 +12,21 @@
                 8. 时间戳文件名（YYYYMMDDHHMM格式，年月日时分）
                 9. SD卡空间自动清理（55GB阈值）
                 10. NTP时间同步功能
+                11. HTTP Basic Authentication认证
   Auther      : www.freenove.com
   Modification: 2026-01-28
+  
+  代码来源：
+  - 基于Freenove ESP32-S3 Camera Example修改
+  - 集成Espressif CameraWebServer (Apache License 2.0)
+  
+  许可证：Creative Commons Attribution-NonCommercial-ShareAlike 3.0 Unported License (CC BY-NC-SA 3.0)
+  详情：https://creativecommons.org/licenses/by-nc-sa/3.0/
+  
+  重要限制：
+  - 禁止商业用途
+  - 必须保留原作者署名
+  - 衍生作品必须使用相同许可证
 **********************************************************************/
 #include "esp_camera.h"
 #include <WiFi.h>
@@ -44,8 +57,8 @@
 // ===========================
 // Enter your WiFi credentials
 // ===========================
-const char* ssid     = "your_ssid";
-const char* password = "your_password";
+const char* ssid     = "zhuline";
+const char* password = "zhu8437547";
 
 // 运行时长统计
 unsigned long startTime = 0;
