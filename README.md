@@ -22,7 +22,7 @@ This project is modified from following open-source projects:
 ### 1. Freenove ESP32-S3 Camera Example
 - **Copyright**: Freenove
 - **Website**: www.freenove.com
-- **License**: CC BY-NC-SA 3.0 (presumed)
+- **License**: CC BY-NC-SA 3.0
 - **Note**: The entire project is constrained by this license
 
 ### 2. Espressif CameraWebServer
@@ -95,7 +95,7 @@ This software is provided "as is", without any express or implied warranties.
 ### 1. Freenove ESP32-S3 Camera Example
 - **版权所有**：Freenove
 - **网站**：www.freenove.com
-- **许可证**：CC BY-NC-SA 3.0（推测）
+- **许可证**：CC BY-NC-SA 3.0
 - **说明**：本项目整体受此许可证约束
 
 ### 2. Espressif CameraWebServer
