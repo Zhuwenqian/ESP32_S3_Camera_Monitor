@@ -17,7 +17,7 @@ extern "C" {
 
 // 用户名和密码
 #define AUTH_USERNAME "admin"
-#define AUTH_PASSWORD "zhu8437547"
+#define AUTH_PASSWORD "password123"
 
 // 认证结果
 typedef enum {
