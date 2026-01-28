@@ -52,9 +52,9 @@ This project is modified from following open-source projects:
 ## Documentation
 
 For detailed documentation, please see the [readme](/readme/) directory:
-- [Tech Stack](/readme/技术栈.md) (Chinese)
-- [Development Documentation](/readme/开发文档.md) (Chinese)
-- [Feature Updates](/readme/功能更新.md) (Chinese)
+- [Tech Stack](/readme/TECHNOLOGY_STACK.md) (English / Chinese)
+- [Development Documentation](/readme/DEVELOPMENT.md) (English / Chinese)
+- [Feature Updates](/readme/CHANGELOG.md) (English / Chinese)
 
 ## Disclaimer
 
@@ -123,9 +123,9 @@ This software is provided "as is", without any express or implied warranties.
 ## 文档
 
 详细文档请查看 [readme](readme/) 目录：
-- [技术栈](readme/技术栈.md)
-- [开发文档](readme/开发文档.md)
-- [功能更新](readme/功能更新.md)
+- [技术栈](readme/TECHNOLOGY_STACK.md) (英语 / 中文)
+- [开发文档](readme/DEVELOPMENT.md) (英语 / 中文)
+- [功能更新](readme/CHANGELOG.md) (英语 / 中文)
 
 ## 免责声明
 
