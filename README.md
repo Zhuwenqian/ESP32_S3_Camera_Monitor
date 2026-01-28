@@ -44,19 +44,19 @@ This project is modified from following open-source projects:
 
 ## Hardware Requirements
 
-- ESP32-S3-CAM development board
-- OV5640 camera
+- ESP32-S3-CAM(GOOUUU version) development board
+- OV5640 camera or other cameras supporting ESP32-S3
 - SD card (64GB or larger recommended)
 - SG-90 servo (optional, for pan-tilt control)
 
 ## Documentation
 
-For detailed documentation, please see the [readme](readme/) directory:
-- [Project Requirements](readme/项目需求.md) (Chinese)
-- [Tech Stack](readme/技术栈.md) (Chinese)
-- [Development Documentation](readme/开发文档.md) (Chinese)
-- [Implementation Documentation](readme/实施文档.md) (Chinese)
-- [Feature Updates](readme/功能更新.md) (Chinese)
+For detailed documentation, please see the [readme](/readme/) directory:
+- [Project Requirements](/readme/项目需求.md) (Chinese)
+- [Tech Stack](/readme/技术栈.md) (Chinese)
+- [Development Documentation](/readme/开发文档.md) (Chinese)
+- [Implementation Documentation](/readme/实施文档.md) (Chinese)
+- [Feature Updates](/readme/功能更新.md) (Chinese)
 
 ## Disclaimer
 
@@ -118,7 +118,7 @@ This software is provided "as is", without any express or implied warranties.
 ## 硬件要求
 
 - ESP32-S3-CAM开发板
-- OV5640摄像头
+- OV5640摄像头或其他支持ESP32-S3的摄像头
 - SD卡（建议64GB或更大）
 - SG-90舵机（可选，用于云台控制）
 
