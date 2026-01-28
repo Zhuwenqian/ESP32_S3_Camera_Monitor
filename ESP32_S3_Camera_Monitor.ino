@@ -12,8 +12,7 @@
                 8. 时间戳文件名（YYYYMMDDHHMM格式，年月日时分）
                 9. SD卡空间自动清理（55GB阈值）
                 10. NTP时间同步功能
-  Original Author      : www.freenove.com
-  Modifier             ：Zhuwenqian
+  Auther      : www.freenove.com
   Modification: 2026-01-28
 **********************************************************************/
 #include "esp_camera.h"
