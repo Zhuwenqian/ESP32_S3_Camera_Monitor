@@ -6,10 +6,10 @@ This product includes the following third-party code:
 1. Freenove ESP32-S3 Camera Example
    Copyright: Freenove
    Website: www.freenove.com
-   License: CC BY-NC-SA 3.0 (presumed)
+   License: CC BY-NC-SA 3.0
 
-2. Espressif Systems - CameraWebServer
+2. Espressif Systems - ESP32 Camera WebServer Example
    Copyright: Copyright 2015-2016 Espressif Systems (Shanghai) PTE LTD
    License: Apache License 2.0
-   Source: https://github.com/espressif/esp32-camera
-   Note: Although this code allows commercial use, the entire project is restricted by CC BY-NC-SA 3.0
+   Source: Arduino Boards Manager - eps32 - ESP32S3 Dev Module - examples - ESP32 - Camera - CameraWebServer
+   Note: Although this code allows commercial use, entire project is restricted by CC BY-NC-SA 3.0
