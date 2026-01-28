@@ -44,8 +44,8 @@
 // ===========================
 // Enter your WiFi credentials
 // ===========================
-const char* ssid     = "zhuline";
-const char* password = "zhu8437547";
+const char* ssid     = "your_ssid";
+const char* password = "your_password";
 
 // 运行时长统计
 unsigned long startTime = 0;
