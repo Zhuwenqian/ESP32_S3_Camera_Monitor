@@ -1,51 +1,52 @@
 /*
- * 文件名：camera_index.h
+ * 文件名 / Filename : camera_index.h
  * 
- * 文件用途：
+ * 文件用途 / File Purpose :
  * 本文件包含Web界面的HTML代码，提供完整的监控控制界面
+ * This file contains HTML code for the web interface, providing a complete monitoring control interface
  * 
- * 功能模块：
- * 1. 视频显示区域：显示实时视频流
- * 2. 拍照控制区域：控制拍照功能
- * 3. SD卡信息区域：显示SD卡存储信息（GB单位）
- * 4. 运行时长区域：显示系统运行时长（HH:MM:SS格式）
- * 5. 摄像头设置区域：调节分辨率、图像质量、亮度、对比度、饱和度
+ * 功能模块 / Function Modules:
+ * 1. 视频显示区域：显示实时视频流 / Video display area: displays real-time video stream
+ * 2. 拍照控制区域：控制拍照功能 / Photo capture control area: controls photo capture function
+ * 3. SD卡信息区域：显示SD卡存储信息（GB单位）/ SD card info area: displays SD card storage information (GB unit)
+ * 4. 运行时长区域：显示系统运行时长（HH:MM:SS格式）/ Uptime area: displays system uptime (HH:MM:SS format)
+ * 5. 摄像头设置区域：调节分辨率、图像质量、亮度、对比度、饱和度 / Camera settings area: adjusts resolution, quality, brightness, contrast, saturation
  * 
- * 技术实现：
- * - 使用HTML5和CSS3构建界面
- * - 使用JavaScript实现AJAX请求
- * - 使用Fetch API与服务器通信
- * - 支持响应式设计
- * - 支持实时状态更新
+ * 技术实现 / Technical Implementation:
+ * - 使用HTML5和CSS3构建界面 / Uses HTML5 and CSS3 to build the interface
+ * - 使用JavaScript实现AJAX请求 / Uses JavaScript to implement AJAX requests
+ * - 使用Fetch API与服务器通信 / Uses Fetch API to communicate with server
+ * - 支持响应式设计 / Supports responsive design
+ * - 支持实时状态更新 / Supports real-time status updates
  * 
- * 界面特点：
- * - 简洁美观的UI设计
- * - 实时视频流显示（MJPEG）
- * - 拍照功能
- * - SD卡空间实时更新（GB单位）
- * - 摄像头参数动态调节
- * - 视频流加载状态显示
+ * 界面特点 / Interface Features:
+ * - 简洁美观的UI设计 / Clean and beautiful UI design
+ * - 实时视频流显示（MJPEG）/ Real-time video stream display (MJPEG)
+ * - 拍照功能 / Photo capture function
+ * - SD卡空间实时更新（GB单位）/ Real-time SD card space update (GB unit)
+ * - 摄像头参数动态调节 / Dynamic camera parameter adjustment
+ * - 视频流加载状态显示 / Video stream loading status display
  * 
- * 创建日期：2026-01-26
- * 最后更新：2026-01-28
- * 最新更新：
- * 1. 添加摄像头设置界面（分辨率、图像质量、亮度、对比度、饱和度）
- * 2. 修改SD卡信息显示单位为GB
- * 3. 修复视频流加载状态显示问题
- * 4. 添加摄像头参数动态调节功能
- * 5. 移除时钟频率动态调整功能（因为需要重新初始化摄像头，会导致系统不稳定）
- * 6. 添加系统运行时长显示功能（HH:MM:SS格式，本地计时每秒更新）
- * 7. 实现运行时长实时更新（每1秒本地增加1秒）
- * 8. 页面加载时从服务器获取初始运行时长
- * 9. 移除视频录制控制界面（开始/停止按钮）
- * 10. 移除录制状态指示器和相关JavaScript函数
- * 11. 视频录制改为系统启动时自动开始，完全自动化
- * 12. 修改照片和视频文件名为时间戳格式（YYYYMMDDHHMM）
- * 13. 实现视频自动分段录制功能（2分钟一段）
- * 14. 系统启动时自动开始录制
+ * 创建日期 / Creation Date : 2026-01-26
+ * 最后更新 / Last Update : 2026-01-28
+ * 最新更新 / Latest Updates:
+ * 1. 添加摄像头设置界面（分辨率、图像质量、亮度、对比度、饱和度）/ Added camera settings interface (resolution, quality, brightness, contrast, saturation)
+ * 2. 修改SD卡信息显示单位为GB / Changed SD card info display unit to GB
+ * 3. 修复视频流加载状态显示问题 / Fixed video stream loading status display issue
+ * 4. 添加摄像头参数动态调节功能 / Added dynamic camera parameter adjustment function
+ * 5. 移除时钟频率动态调整功能（因为需要重新初始化摄像头，会导致系统不稳定）/ Removed dynamic clock frequency adjustment (because it requires re-initializing the camera, which can cause system instability)
+ * 6. 添加系统运行时长显示功能（HH:MM:SS格式，本地计时每秒更新）/ Added system uptime display function (HH:MM:SS format, local timer updates every second)
+ * 7. 实现运行时长实时更新（每1秒本地增加1秒）/ Implemented real-time uptime update (adds 1 second locally every 1 second)
+ * 8. 页面加载时从服务器获取初始运行时长 / Fetches initial uptime from server on page load
+ * 9. 移除视频录制控制界面（开始/停止按钮）/ Removed video recording control interface (start/stop buttons)
+ * 10. 移除录制状态指示器和相关JavaScript函数 / Removed recording status indicator and related JavaScript functions
+ * 11. 视频录制改为系统启动时自动开始，完全自动化 / Video recording changed to auto-start on boot, fully automated
+ * 12. 修改照片和视频文件名为时间戳格式（YYYYMMDDHHMM）/ Changed photo and video filename format to timestamp (YYYYMMDDHHMM)
+ * 13. 实现视频自动分段录制功能（2分钟一段）/ Implemented auto-segmented video recording (2 minutes per segment)
+ * 14. 系统启动时自动开始录制 / Recording starts automatically on boot
  */
 
-// Web界面HTML代码
+// Web界面HTML代码 / Web interface HTML code
 const char index_ov2640_html[] = R"rawliteral(
 <!DOCTYPE html>
 <html lang="zh-CN">
@@ -432,7 +433,7 @@ const char index_ov2640_html[] = R"rawliteral(
     </div>
     
     <script>
-        // 应用摄像头设置
+        // 应用摄像头设置 / Apply camera settings
         function applyCameraSettings() {
             const framesize = document.getElementById('framesize').value;
             const quality = document.getElementById('quality').value;
@@ -440,7 +441,7 @@ const char index_ov2640_html[] = R"rawliteral(
             const contrast = document.getElementById('contrast').value;
             const saturation = document.getElementById('saturation').value;
             
-            // 应用分辨率设置
+            // 应用分辨率设置 / Apply resolution setting
             fetch('/control?var=framesize&val=' + framesize)
             .then(response => {
                 if (!response.ok) {
@@ -453,7 +454,7 @@ const char index_ov2640_html[] = R"rawliteral(
                 alert('设置分辨率失败！');
             });
             
-            // 应用图像质量设置
+            // 应用图像质量设置 / Apply image quality setting
             fetch('/control?var=quality&val=' + quality)
             .then(response => {
                 if (!response.ok) {
@@ -466,7 +467,7 @@ const char index_ov2640_html[] = R"rawliteral(
                 alert('设置图像质量失败！');
             });
             
-            // 应用亮度设置
+            // 应用亮度设置 / Apply brightness setting
             fetch('/control?var=brightness&val=' + brightness)
             .then(response => {
                 if (!response.ok) {
@@ -479,7 +480,7 @@ const char index_ov2640_html[] = R"rawliteral(
                 alert('设置亮度失败！');
             });
             
-            // 应用对比度设置
+            // 应用对比度设置 / Apply contrast setting
             fetch('/control?var=contrast&val=' + contrast)
             .then(response => {
                 if (!response.ok) {
@@ -492,7 +493,7 @@ const char index_ov2640_html[] = R"rawliteral(
                 alert('设置对比度失败！');
             });
             
-            // 应用饱和度设置
+            // 应用饱和度设置 / Apply saturation setting
             fetch('/control?var=saturation&val=' + saturation)
             .then(response => {
                 if (!response.ok) {
@@ -505,7 +506,7 @@ const char index_ov2640_html[] = R"rawliteral(
                 alert('设置饱和度失败！');
             });
             
-            // 重新加载视频流以应用新设置
+            // 重新加载视频流以应用新设置 / Reload video stream to apply new settings
             setTimeout(() => {
                 const streamImg = document.getElementById('stream');
                 const currentSrc = streamImg.src;
@@ -516,12 +517,12 @@ const char index_ov2640_html[] = R"rawliteral(
             }, 500);
         }
         
-        // 拍照功能
+        // 拍照功能 / Photo capture function
         function capturePhoto() {
-            // 使用GET请求，因为app_httpd.cpp中的capture_handler是GET方法
+            // 使用GET请求，因为app_httpd.cpp中的capture_handler是GET方法 / Use GET request because capture_handler in app_httpd.cpp is GET method
             fetch('/capture')
             .then(response => {
-                // 创建图片URL并在新窗口打开
+                // 创建图片URL并在新窗口打开 / Create image URL and open in new window
                 const blob = response.blob();
                 return blob.then(blob => {
                     const url = URL.createObjectURL(blob);
@@ -534,19 +535,19 @@ const char index_ov2640_html[] = R"rawliteral(
             });
         }
         
-        // 在新标签页中打开视频流
+        // 在新标签页中打开视频流 / Open video stream in new tab
         function openStreamInNewTab() {
             const streamUrl = 'http://' + window.location.hostname + ':81/stream';
             console.log('在新标签页中打开视频流:', streamUrl);
             window.open(streamUrl, '_blank');
         }
         
-        // 视频流重试机制
+        // 视频流重试机制 / Video stream retry mechanism
         let retryCount = 0;
         const maxRetries = 10;
         const retryInterval = 3000; // 3秒重试一次
         
-        // 设置视频流URL
+        // 设置视频流URL / Set video stream URL
         function setStreamUrl() {
             const streamImg = document.getElementById('stream');
             const streamUrl = 'http://' + window.location.hostname + ':81/stream';
@@ -554,14 +555,14 @@ const char index_ov2640_html[] = R"rawliteral(
             console.log('设置视频流URL:', streamUrl, '重试次数:', retryCount);
         }
         
-        // 视频流加载失败处理
+        // 视频流加载失败处理 / Video stream load failure handling
         function handleStreamError() {
             const streamImg = document.getElementById('stream');
             console.error('视频流加载失败，准备重试...');
             
             retryCount++;
             if (retryCount <= maxRetries) {
-                // 延迟重试
+                // 延迟重试 / Delay before retry
                 setTimeout(() => {
                     setStreamUrl();
                 }, retryInterval);
@@ -571,33 +572,33 @@ const char index_ov2640_html[] = R"rawliteral(
             }
         }
         
-        // 视频流加载成功处理
+        // 视频流加载成功处理 / Video stream load success handling
         function handleStreamLoad() {
             console.log('视频流加载成功');
             retryCount = 0; // 重置重试计数
         }
         
-        // 页面加载完成后启动
+        // 页面加载完成后启动 / Start after page load completes
         window.onload = function() {
             const streamImg = document.getElementById('stream');
-            // 添加事件监听器
+            // 添加事件监听器 / Add event listeners
             streamImg.onerror = handleStreamError;
             streamImg.onload = handleStreamLoad;
             
-            // 初始加载视频流
+            // 初始加载视频流 / Initial load video stream
             setStreamUrl();
             
-            // 初始更新SD卡信息和运行时长
+            // 初始更新SD卡信息和运行时长 / Initial update SD card info and uptime
             updateSDInfo();
             
-            // 每5秒更新一次SD卡信息
+            // 每5秒更新一次SD卡信息 / Update SD card info every 5 seconds
             setInterval(updateSDInfo, 5000);
             
-            // 每秒更新运行时长
+            // 每秒更新运行时长 / Update uptime every second
             setInterval(updateUptime, 1000);
         };
         
-        // 更新运行时长（本地计时）
+        // 更新运行时长（本地计时）/ Update uptime (local timer)
         let uptimeSeconds = 0;
         function updateUptime() {
             uptimeSeconds++;
@@ -614,13 +615,13 @@ const char index_ov2640_html[] = R"rawliteral(
             }
         }
         
-        // 视频流加载成功处理
+        // 视频流加载成功处理 / Video stream load success handling
         function handleStreamLoad() {
             console.log('视频流加载成功');
             retryCount = 0; // 重置重试计数
         }
         
-        // 更新SD卡信息和运行时长
+        // 更新SD卡信息 / Update SD card information和运行时长
         function updateSDInfo() {
             fetch('/status')
             .then(response => {
@@ -631,7 +632,7 @@ const char index_ov2640_html[] = R"rawliteral(
             })
             .then(data => {
                 console.log('系统状态:', data);
-                // 更新SD卡信息
+                // 更新SD卡信息 / Update SD card information
                 const totalSpace = document.getElementById('sd-total');
                 const usedSpace = document.getElementById('sd-used');
                 const freeSpace = document.getElementById('sd-free');

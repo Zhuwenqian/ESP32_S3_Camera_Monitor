@@ -1,25 +1,27 @@
 /*
- * 文件名：camera_pins.h
+ * 文件名 / Filename : camera_pins.h
  * 
- * 文件用途：
+ * 文件用途 / File Purpose :
  * 本文件定义ESP32-S3-CAM的摄像头引脚配置
+ * This file defines the camera pin configuration for ESP32-S3-CAM
  * 根据不同的摄像头型号，使用不同的引脚配置
+ * Different pin configurations are used for different camera models
  * 
- * 摄像头型号：
- * - ESP32S3_EYE：ESP32-S3-EYE开发板
+ * 摄像头型号 / Camera Models:
+ * - ESP32S3_EYE：ESP32-S3-EYE开发板 / ESP32-S3-EYE Development Board
  * 
- * 引脚说明：
- * - PWDN：电源控制引脚（-1表示不使用）
- * - RESET：复位引脚（-1表示不使用）
- * - XCLK：摄像头时钟引脚
- * - SIOD/SIOC：I2C数据/时钟引脚
- * - Y2-Y9：摄像头数据引脚
- * - VSYNC：垂直同步引脚
- * - HREF：水平参考引脚
- * - PCLK：像素时钟引脚
+ * 引脚说明 / Pin Description:
+ * - PWDN：电源控制引脚（-1表示不使用）/ Power control pin (-1 means not used)
+ * - RESET：复位引脚（-1表示不使用）/ Reset pin (-1 means not used)
+ * - XCLK：摄像头时钟引脚 / Camera clock pin
+ * - SIOD/SIOC：I2C数据/时钟引脚 / I2C data/clock pins
+ * - Y2-Y9：摄像头数据引脚 / Camera data pins
+ * - VSYNC：垂直同步引脚 / Vertical sync pin
+ * - HREF：水平参考引脚 / Horizontal reference pin
+ * - PCLK：像素时钟引脚 / Pixel clock pin
  * 
- * 创建日期：2026-01-26
- * 最后更新：2026-01-26
+ * 创建日期 / Creation Date : 2026-01-26
+ * 最后更新 / Last Update : 2026-01-26
  */
 
 #if defined(CAMERA_MODEL_WROVER_KIT)
@@ -195,7 +197,7 @@
 
 
 #elif defined(CAMERA_MODEL_ESP32_CAM_BOARD)
-// The 18 pin header on the board has Y5 and Y3 swapped
+// The 18 pin header on the board has Y5 and Y3 swapped / 开发板上的18针接口Y5和Y3交换了
 #define USE_BOARD_HEADER 0 
 #define PWDN_GPIO_NUM    32
 #define RESET_GPIO_NUM   33
@@ -243,7 +245,7 @@
 #define PCLK_GPIO_NUM     11
 
 #elif defined(CAMERA_MODEL_ESP32S2_CAM_BOARD)
-// The 18 pin header on the board has Y5 and Y3 swapped
+// The 18 pin header on the board has Y5 and Y3 swapped / 开发板上的18针接口Y5和Y3交换了
 #define USE_BOARD_HEADER 0
 #define PWDN_GPIO_NUM     1
 #define RESET_GPIO_NUM    2
@@ -271,8 +273,8 @@
 #define HREF_GPIO_NUM     4
 #define PCLK_GPIO_NUM     3
 
-#elif defined(CAMERA_MODEL_ESP32S3_EYE)
-// ESP32-S3-EYE摄像头引脚配置
+#elif defined(CAMERA_MODEL_ESP32S3_EYE) // ESP32-S3-EYE开发板 / ESP32-S3-EYE Development Board
+// ESP32-S3-EYE摄像头引脚配置 / ESP32-S3-EYE Camera Pin Configuration
 #define PWDN_GPIO_NUM -1
 #define RESET_GPIO_NUM -1
 #define XCLK_GPIO_NUM 15
@@ -292,8 +294,8 @@
 #define HREF_GPIO_NUM 7
 #define PCLK_GPIO_NUM 13
 
-#elif defined(CAMERA_MODEL_ESP32S3_CAM_GUOYUN)
-// ESP32-S3-CAM 果云版摄像头引脚配置
+#elif defined(CAMERA_MODEL_ESP32S3_CAM_GUOYUN) // ESP32-S3-CAM 果云版 / ESP32-S3-CAM Guoyun Version
+// ESP32-S3-CAM 果云版摄像头引脚配置 / ESP32-S3-CAM Guoyun Version Camera Pin Configuration
 #define PWDN_GPIO_NUM -1
 #define RESET_GPIO_NUM -1
 #define XCLK_GPIO_NUM 40
@@ -314,5 +316,5 @@
 #define PCLK_GPIO_NUM 41
 
 #else
-#error "Camera model not selected"
+#error "Camera model not selected / 摄像头型号未选择"
 #endif

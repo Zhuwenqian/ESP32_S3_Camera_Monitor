@@ -1,3 +1,43 @@
+/**********************************************************************
+  文件名称 / Filename : auth.cpp
+  文件用途 / File Purpose : HTTP Basic Authentication认证实现 / HTTP Basic Authentication Implementation
+               本文件实现了基于HTTP Basic Authentication的认证功能
+               This file implements HTTP Basic Authentication functionality
+               主要功能包括 / Main Features:
+               1. HTTP Basic Authentication验证 / HTTP Basic Authentication verification
+               2. 会话管理（14天过期）/ Session management (14 days expiration)
+               3. Base64编码解码 / Base64 encoding and decoding
+               4. 会话ID生成 / Session ID generation
+               5. 客户端IP地址获取 / Client IP address retrieval
+               6. 会话查找和创建 / Session finding and creation
+               7. 过期会话清理 / Expired session cleanup
+  作者 / Author : ESP32-S3监控项目 / ESP32-S3 Monitoring Project
+  修改日期 / Modification Date : 2026-01-28
+  硬件平台 / Hardware Platform : ESP32S3-EYE开发板 / ESP32S3-EYE Development Board
+  依赖库 / Dependencies : esp_http_server.h - HTTP服务器库 / HTTP Server Library
+               esp_log.h - 日志库 / Logging Library
+               esp_random.h - 随机数生成库 / Random Number Generation Library
+               mbedtls/base64.h - Base64编码库 / Base64 Encoding Library
+               lwip/sockets.h - Socket库 / Socket Library
+  使用说明 / Usage Instructions : 1. 调用auth_init()初始化认证模块 / Call auth_init() to initialize authentication module
+               2. 在HTTP请求处理函数中调用auth_verify()验证认证 / Call auth_verify() in HTTP request handler to verify authentication
+               3. 认证失败时调用auth_send_401()发送401响应 / Call auth_send_401() to send 401 response when authentication fails
+               4. 定期调用auth_cleanup_expired_sessions()清理过期会话 / Call auth_cleanup_expired_sessions() periodically to clean up expired sessions
+  参数调整 / Parameter Adjustment : MAX_SESSIONS - 最大会话数量（默认20）/ Maximum number of sessions (default 20)
+               SESSION_EXPIRE_TIME - 会话过期时间（默认14天）/ Session expiration time (default 14 days)
+               AUTH_USERNAME - 认证用户名（默认admin）/ Authentication username (default admin)
+               AUTH_PASSWORD - 认证密码（默认password123）/ Authentication password (default password123)
+               调整建议：根据实际需求调整会话数量和过期时间 / Adjustment suggestion: Adjust session count and expiration time based on actual needs
+  最新更新 / Latest Updates : 1. 添加会话管理功能 / Added session management
+               2. 添加Base64编码解码功能 / Added Base64 encoding and decoding
+               3. 添加会话ID生成功能 / Added session ID generation
+               4. 添加客户端IP地址获取功能 / Added client IP address retrieval
+               5. 添加过期会话清理功能 / Added expired session cleanup
+  注意事项 / Important Notes : 会话14天后自动过期，需要重新登录 / Sessions expire automatically after 14 days, need to re-login
+               会话与客户端IP绑定，防止会话劫持 / Sessions are bound to client IP to prevent session hijacking
+               所有敏感接口都需要认证 / All sensitive interfaces require authentication
+**********************************************************************/
+
 #include "auth.h"
 #include <string.h>
 #include <stdlib.h>
@@ -10,10 +50,10 @@
 
 static const char *TAG = "AUTH";
 
-// 会话数组
+// 会话数组 / Session array
 static auth_session_t sessions[MAX_SESSIONS];
 
-// 初始化标志
+// 初始化标志 / Initialization flag
 static bool auth_initialized = false;
 
 /**
@@ -94,7 +134,7 @@ static bool generate_session_id(char *session_id) {
     // 生成随机字节
     esp_fill_random(random_bytes, sizeof(random_bytes));
     
-    // Base64编码
+    // Base64编码 / Base64 encode
     int encoded_len = base64_encode(random_bytes, sizeof(random_bytes), session_id, 32);
     if(encoded_len < 0) {
         return false;
@@ -120,7 +160,7 @@ static auth_session_t *find_session(const char *session_id) {
     return NULL;
 }
 
-// 前向声明
+// 前向声明 / Forward declaration
 static auth_session_t *create_session(const char *client_ip);
 
 /**
@@ -154,7 +194,7 @@ static auth_session_t *create_session(const char *client_ip) {
     // 查找空闲会话槽
     for(int i = 0; i < MAX_SESSIONS; i++) {
         if(!sessions[i].active) {
-            // 生成会话ID
+            // 生成会话ID / Generate session ID
             if(!generate_session_id(sessions[i].session_id)) {
                 ESP_LOGE(TAG, "Failed to generate session ID");
                 return NULL;
@@ -232,7 +272,7 @@ auth_result_t auth_verify_basic(httpd_req_t *req) {
     // 提取Base64编码的字符串
     char *base64_str = auth_header + 6;
     
-    // Base64解码
+    // Base64解码 / Base64 decode
     unsigned char decoded[128];
     int decoded_len = base64_decode(base64_str, strlen(base64_str), decoded, sizeof(decoded));
     if(decoded_len < 0) {
@@ -264,7 +304,7 @@ auth_result_t auth_verify_basic(httpd_req_t *req) {
         return AUTH_FAILED;
     }
     
-    // 查找或创建会话（复用相同IP的会话）
+    // 查找或创建会话 / Find or create session（复用相同IP的会话）
     auth_session_t *session = find_or_create_session(client_ip);
     if(!session) {
         ESP_LOGE(TAG, "Failed to find or create session");
@@ -316,7 +356,7 @@ auth_result_t auth_verify_session(httpd_req_t *req) {
     
     ESP_LOGI(TAG, "Extracted session_id: %s", session_id_end);
     
-    // 查找会话
+    // 查找会话 / Find session
     auth_session_t *session = find_session(session_id_end);
     if(!session) {
         ESP_LOGW(TAG, "Session not found: %s", session_id_end);

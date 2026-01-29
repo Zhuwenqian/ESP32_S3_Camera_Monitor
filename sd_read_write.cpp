@@ -1,66 +1,68 @@
 /**********************************************************************
-  文件名称    : sd_read_write.cpp
-  文件用途    : SD_MMC存储卡读写功能实现
+  文件名称 / Filename : sd_read_write.cpp
+  文件用途 / File Purpose : SD_MMC存储卡读写功能实现 / SD_MMC Storage Card Read/Write Implementation
                本文件实现了SD卡的初始化、文件读写、目录操作等功能
-               主要功能包括：
-               1. SD_MMC卡初始化和检测
-               2. 目录创建、删除、列表显示
-               3. 文件创建、读取、写入、删除、重命名
-               4. JPEG图像文件写入
-               5. 目录文件计数
-               6. 摄像头照片保存功能
-               7. SD卡空间查询功能（GB单位）
-               8. 视频录制功能（AVI格式，MJPEG编码）
-               9. 自动清理旧文件功能（55GB阈值）
-               10. 时间戳文件名生成功能（YYYYMMDDHHMM格式，年月日时分）
-               11. 视频自动分段录制功能（2分钟一段）
-  作者        : ESP32-S3监控项目
-  修改日期    : 2026-01-28
-  硬件平台    : ESP32S3-EYE开发板
-  依赖库      : FS.h - 文件系统基础库
-               SD_MMC.h - SD_MMC驱动库
-               time.h - 时间处理库
-  引脚说明    : SD_MMC_CLK (GPIO39) - SD卡时钟线（不可修改）
-               SD_MMC_CMD (GPIO38) - SD卡命令线（不可修改）
-               SD_MMC_D0  (GPIO40) - SD卡数据线（不可修改）
-  使用说明    : 1. 调用sdmmcInit()初始化SD卡
-               2. 使用文件操作函数进行读写
-               3. SD卡使用SDIO模式，4位并行传输，速度快
-  参数调整    : SDMMC_FREQ_DEFAULT - SD卡通信频率
-               调整建议：使用Class 10以上SD卡以获得最佳性能
-  最新更新    : 1. 修改SD卡空间计算函数，返回GB单位（乘以100保留2位小数）
-               2. 添加SD卡空间查询功能（getSDTotalSpaceMB、getSDUsedSpaceMB、getSDFreeSpaceMB）
-               3. 优化文件目录结构（photos和videos子目录）
-               4. 添加视频录制功能（AVI格式，MJPEG编码）
-               5. 添加自动清理旧文件功能（55GB阈值）
-               6. 添加时间戳文件名生成功能（generateTimestampFilename）
-               7. 实现视频自动分段录制功能（2分钟一段）
-               8. 修改照片和视频文件名为时间戳格式（YYYYMMDDHHMM）
-               9. 使用NTP时间同步获取准确时间
-  注意事项    : 时间戳格式使用NTP同步的系统时间，确保时间准确性
+               This file implements SD card initialization, file read/write, directory operations, and other functions
+               主要功能包括 / Main Features:
+               1. SD_MMC卡初始化和检测 / SD_MMC card initialization and detection
+               2. 目录创建、删除、列表显示 / Directory creation, deletion, and listing
+               3. 文件创建、读取、写入、删除、重命名 / File creation, reading, writing, deletion, and renaming
+               4. JPEG图像文件写入 / JPEG image file writing
+               5. 目录文件计数 / Directory file counting
+               6. 摄像头照片保存功能 / Camera photo saving function
+               7. SD卡空间查询功能（GB单位）/ SD card space query function (GB unit)
+               8. 视频录制功能（AVI格式，MJPEG编码）/ Video recording function (AVI format, MJPEG encoding)
+               9. 自动清理旧文件功能（55GB阈值）/ Auto cleanup old files function (55GB threshold)
+               10. 时间戳文件名生成功能（YYYYMMDDHHMM格式，年月日时分）/ Timestamp filename generation function (YYYYMMDDHHMM format)
+               11. 视频自动分段录制功能（2分钟一段）/ Auto-segmented video recording function (2 minutes per segment)
+  作者 / Author : ESP32-S3监控项目 / ESP32-S3 Monitoring Project
+  修改日期 / Modification Date : 2026-01-28
+  硬件平台 / Hardware Platform : ESP32S3-EYE开发板 / ESP32S3-EYE Development Board
+  依赖库 / Dependencies : FS.h - 文件系统基础库 / File System Base Library
+               SD_MMC.h - SD_MMC驱动库 / SD_MMC Driver Library
+               time.h - 时间处理库 / Time Processing Library
+  引脚说明 / Pin Description : SD_MMC_CLK (GPIO39) - SD卡时钟线（不可修改）/ SD card clock line (cannot be modified)
+               SD_MMC_CMD (GPIO38) - SD卡命令线（不可修改）/ SD card command line (cannot be modified)
+               SD_MMC_D0  (GPIO40) - SD卡数据线（不可修改）/ SD card data line (cannot be modified)
+  使用说明 / Usage Instructions : 1. 调用sdmmcInit()初始化SD卡 / Call sdmmcInit() to initialize SD card
+               2. 使用文件操作函数进行读写 / Use file operation functions for reading and writing
+               3. SD卡使用SDIO模式，4位并行传输，速度快 / SD card uses SDIO mode, 4-bit parallel transmission, high speed
+  参数调整 / Parameter Adjustment : SDMMC_FREQ_DEFAULT - SD卡通信频率 / SD card communication frequency
+               调整建议：使用Class 10以上SD卡以获得最佳性能 / Adjustment suggestion: Use Class 10 or higher SD card for best performance
+  最新更新 / Latest Updates : 1. 修改SD卡空间计算函数，返回GB单位（乘以100保留2位小数）/ Modified SD card space calculation function, returns GB unit (multiply by 100 to keep 2 decimal places)
+               2. 添加SD卡空间查询功能（getSDTotalSpaceMB、getSDUsedSpaceMB、getSDFreeSpaceMB）/ Added SD card space query function (getSDTotalSpaceMB, getSDUsedSpaceMB, getSDFreeSpaceMB)
+               3. 优化文件目录结构（photos和videos子目录）/ Optimized file directory structure (photos and videos subdirectories)
+               4. 添加视频录制功能（AVI格式，MJPEG编码）/ Added video recording function (AVI format, MJPEG encoding)
+               5. 添加自动清理旧文件功能（55GB阈值）/ Added auto cleanup old files function (55GB threshold)
+               6. 添加时间戳文件名生成功能（generateTimestampFilename）/ Added timestamp filename generation function (generateTimestampFilename)
+               7. 实现视频自动分段录制功能（2分钟一段）/ Implemented auto-segmented video recording function (2 minutes per segment)
+               8. 修改照片和视频文件名为时间戳格式（YYYYMMDDHHMM）/ Changed photo and video filename format to timestamp (YYYYMMDDHHMM)
+               9. 使用NTP时间同步获取准确时间 / Uses NTP time synchronization to get accurate time
+  注意事项 / Important Notes : 时间戳格式使用NTP同步的系统时间，确保时间准确性 / Timestamp format uses NTP-synchronized system time to ensure time accuracy
 **********************************************************************/
+
 #include "sd_read_write.h"
 #include "time.h"
 
-// 视频录制相关变量
-static File videoFile;                    // 视频文件对象
-static bool isRecording = false;          // 是否正在录制
-static char currentVideoFilename[64];      // 当前录制的视频文件名
-static uint32_t videoFrameCount = 0;      // 视频帧计数
-static uint32_t videoStartTime = 0;       // 视频开始时间
-static uint32_t videoTotalSize = 0;       // 视频总大小
-static uint32_t videoMaxFrameSize = 0;    // 最大帧大小
-static uint32_t videoFPS = 15;            // 视频帧率
-static uint32_t videoWidth = 1280;        // 视频宽度
-static uint32_t videoHeight = 720;        // 视频高度
-static uint32_t moviOffset = 0;           // movi列表偏移量
-static uint32_t idx1Offset = 0;           // idx1列表偏移量
-static uint32_t videoSegmentCount = 0;    // 视频分段计数
-static uint32_t videoSegmentStartTime = 0; // 当前分段开始时间
-static const uint32_t VIDEO_SEGMENT_DURATION = 120; // 视频分段时长（秒），2分钟
-static AVI_MAIN_HEADER aviMainHeader;     // AVI主头
-static AVI_STREAM_HEADER aviStreamHeader; // AVI流头
-static AVI_BITMAP_INFO aviBitmapInfo;     // AVI位图信息
+// 视频录制相关变量 / Video recording related variables
+static File videoFile;                    // 视频文件对象 / Video file object
+static bool isRecording = false;          // 是否正在录制 / Is recording
+static char currentVideoFilename[64];      // 当前录制的视频文件名 / Current video filename being recorded
+static uint32_t videoFrameCount = 0;      // 视频帧计数 / Video frame count
+static uint32_t videoStartTime = 0;       // 视频开始时间 / Video start time
+static uint32_t videoTotalSize = 0;       // 视频总大小 / Video total size
+static uint32_t videoMaxFrameSize = 0;    // 最大帧大小 / Maximum frame size
+static uint32_t videoFPS = 15;            // 视频帧率 / Video frame rate
+static uint32_t videoWidth = 1280;        // 视频宽度 / Video width
+static uint32_t videoHeight = 720;        // 视频高度 / Video height
+static uint32_t moviOffset = 0;           // movi列表偏移量 / movi list offset
+static uint32_t idx1Offset = 0;           // idx1列表偏移量 / idx1 list offset
+static uint32_t videoSegmentCount = 0;    // 视频分段计数 / Video segment count
+static uint32_t videoSegmentStartTime = 0; // 当前分段开始时间 / Current segment start time
+static const uint32_t VIDEO_SEGMENT_DURATION = 120; // 视频分段时长（秒），2分钟 / Video segment duration (seconds), 2 minutes
+static AVI_MAIN_HEADER aviMainHeader;     // AVI主头 / AVI main header
+static AVI_STREAM_HEADER aviStreamHeader; // AVI流头 / AVI stream header
+static AVI_BITMAP_INFO aviBitmapInfo;     // AVI位图信息 / AVI bitmap info
 
 /**
  * @brief SD_MMC存储卡初始化函数

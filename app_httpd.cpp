@@ -12,44 +12,46 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 /**********************************************************************
-  文件名称    : app_httpd.cpp
-  文件用途    : HTTP服务器实现
+  文件名称 / Filename : app_httpd.cpp
+  文件用途 / File Purpose : HTTP服务器实现 / HTTP Server Implementation
                本文件实现了Web服务器功能，提供视频流、拍照等接口
-               主要功能包括：
-               1. 视频流接口（/stream）
-               2. 拍照接口（/capture）
-               3. 系统状态接口（/status）
-               4. 摄像头参数控制接口（分辨率、图像质量、亮度、对比度、饱和度）
-               5. 系统运行时长统计
-               6. HTTP Basic Authentication认证
-               7. 会话管理（14天过期）
-  作者        : ESP32-S3监控项目
-  修改日期    : 2026-01-28
-  硬件平台    : ESP32S3-EYE开发板
-  依赖库      : esp_http_server.h - HTTP服务器库
-               esp_camera.h - 摄像头库
-               sd_read_write.h - SD卡读写库
-               auth.h - 认证模块
-  使用说明    : 1. 调用startCameraServer()启动HTTP服务器
-               2. 通过Web界面或API访问各项功能
-               3. 首次访问需要输入用户名和密码
-               4. 登录后14天内无需重复验证
-  参数调整    : JSON缓冲区大小 - 2048字节，用于存储系统状态信息
-               调整建议：如需添加更多状态信息，可适当增大缓冲区
-  最新更新    : 1. 添加SD卡空间信息到status接口（GB单位）
-               2. 支持动态调整摄像头分辨率、图像质量、亮度、对比度、饱和度
-               3. 删除视频录制控制接口（/record/start、/record/stop、/record/status）
-               4. 删除视频录制任务（videoRecordTask）
-               5. 添加HTTP Basic Authentication认证
-               6. 添加会话管理功能（14天过期）
-               7. 为主页、视频流、拍照接口、摄像头控制接口添加认证保护
-  注意事项    : 视频流和拍照功能都需要摄像头正常工作
-               时钟频率需要在启动时设置，不支持运行时动态调整
-               视频录制功能在系统启动时自动开始，无需手动操作
-               Web前端已移除视频录制控制界面，录制完全自动化
-               所有敏感接口都需要认证，用户名和密码在auth.h中定义
-               会话14天后自动过期，需要重新登录
+               This file implements web server functionality, providing video streaming, photo capture, and other interfaces
+               主要功能包括 / Main Features:
+               1. 视频流接口（/stream）/ Video streaming interface (/stream)
+               2. 拍照接口（/capture）/ Photo capture interface (/capture)
+               3. 系统状态接口（/status）/ System status interface (/status)
+               4. 摄像头参数控制接口（分辨率、图像质量、亮度、对比度、饱和度）/ Camera parameter control interface (resolution, quality, brightness, contrast, saturation)
+               5. 系统运行时长统计 / System uptime statistics
+               6. HTTP Basic Authentication认证 / HTTP Basic Authentication
+               7. 会话管理（14天过期）/ Session management (14 days expiration)
+  作者 / Author : ESP32-S3监控项目 / ESP32-S3 Monitoring Project
+  修改日期 / Modification Date : 2026-01-28
+  硬件平台 / Hardware Platform : ESP32S3-EYE开发板 / ESP32S3-EYE Development Board
+  依赖库 / Dependencies : esp_http_server.h - HTTP服务器库 / HTTP Server Library
+               esp_camera.h - 摄像头库 / Camera Library
+               sd_read_write.h - SD卡读写库 / SD Card Read/Write Library
+               auth.h - 认证模块 / Authentication Module
+  使用说明 / Usage Instructions : 1. 调用startCameraServer()启动HTTP服务器 / Call startCameraServer() to start HTTP server
+               2. 通过Web界面或API访问各项功能 / Access features via web interface or API
+               3. 首次访问需要输入用户名和密码 / First access requires username and password
+               4. 登录后14天内无需重复验证 / No need to re-authenticate within 14 days after login
+  参数调整 / Parameter Adjustment : JSON缓冲区大小 - 2048字节，用于存储系统状态信息 / JSON buffer size - 2048 bytes, used to store system status information
+               调整建议：如需添加更多状态信息，可适当增大缓冲区 / Adjustment suggestion: Increase buffer size if more status information is needed
+  最新更新 / Latest Updates : 1. 添加SD卡空间信息到status接口（GB单位）/ Added SD card space information to status interface (GB unit)
+               2. 支持动态调整摄像头分辨率、图像质量、亮度、对比度、饱和度 / Support dynamic adjustment of camera resolution, quality, brightness, contrast, saturation
+               3. 删除视频录制控制接口（/record/start、/record/stop、/record/status）/ Removed video recording control interfaces (/record/start, /record/stop, /record/status)
+               4. 删除视频录制任务（videoRecordTask）/ Removed video recording task (videoRecordTask)
+               5. 添加HTTP Basic Authentication认证 / Added HTTP Basic Authentication
+               6. 添加会话管理功能（14天过期）/ Added session management (14 days expiration)
+               7. 为主页、视频流、拍照接口、摄像头控制接口添加认证保护 / Added authentication protection to main page, video stream, photo capture, and camera control interfaces
+  注意事项 / Important Notes : 视频流和拍照功能都需要摄像头正常工作 / Video streaming and photo capture require camera to work properly
+               时钟频率需要在启动时设置，不支持运行时动态调整 / Clock frequency must be set at startup, runtime adjustment not supported
+               视频录制功能在系统启动时自动开始，无需手动操作 / Video recording starts automatically on boot, no manual operation needed
+               Web前端已移除视频录制控制界面，录制完全自动化 / Web frontend has removed video recording control interface, recording is fully automated
+               所有敏感接口都需要认证，用户名和密码在auth.h中定义 / All sensitive interfaces require authentication, username and password are defined in auth.h
+               会话14天后自动过期，需要重新登录 / Sessions expire automatically after 14 days, need to re-login
 **********************************************************************/
+
 #include "esp_http_server.h"
 #include "esp_timer.h"
 #include "esp_camera.h"
@@ -123,7 +125,7 @@ static ra_filter_t *ra_filter_init(ra_filter_t *filter, size_t sample_size)
 
 #ifdef CONFIG_LED_ILLUMINATOR_ENABLED
 void enable_led(bool en)
-{ // Turn LED On or Off
+{ // Turn LED On or Off / 打开或关闭LED / 打开或关闭LED / 打开或关闭LED / 打开或关闭LED
     int duty = en ? led_duty : 0;
     if (en && isStreaming && (led_duty > CONFIG_LED_MAX_INTENSITY))
     {
