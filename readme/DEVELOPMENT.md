@@ -38,6 +38,848 @@ This project is based on the ESP32-S3-CAM (Guoyun version) development board, im
 - **Web Server**: ESP-IDF httpd component
 - **Video Encoding**: MJPEG
 
+---
+
+## II. System Architecture Design
+
+### 2.1 System Architecture Diagram
+
+```
+┌─────────────────────────────────────────────────────────────┐
+│                        ESP32-S3-CAM                          │
+├─────────────────────────────────────────────────────────────┤
+│  ┌──────────────┐                                           │
+│  │  Camera Module │                                         │
+│  │  OV5640      │                                           │
+│  └──────────────┘                                           │
+│         │                                                   │
+│  ┌──────┴─────────────────────────────────────────────┐   │
+│  │              Core Control Module                   │   │
+│  │  - Video capture and encoding                      │   │
+│  │  - Video streaming                                 │   │
+│  └─────────────────────────────────────────────────┘   │
+│         │                                                 │
+│  ┌──────┴─────────────────────────────────────────────┐   │
+│  │              Web Server Module                     │   │
+│  │  - Video streaming service                         │   │
+│  │  - Photo capture API                               │   │
+│  │  - Web interface                                   │   │
+│  └───────────────────────────────────────────────────┘   │
+│         │                                                 │
+│  ┌──────┴─────────────────────────────────────────────┐   │
+│  │              WiFi Communication Module              │   │
+│  └───────────────────────────────────────────────────┘   │
+└─────────────────────────────────────────────────────────────┘
+                            │
+                            │ WiFi
+                            │
+         ┌──────────────────┴──────────────────┐
+         │                                      │
+    ┌─────┴─────┐                        ┌─────┴─────┐
+    │  Web Browser │                       │  Mobile Device │
+    └───────────┘                        └───────────┘
+```
+
+### 2.2 Module Division
+
+#### 2.2.1 Camera Module
+- Responsible for OV5640 camera initialization and configuration
+- Responsible for video frame capture
+- Responsible for JPEG encoding
+- Supports multiple resolutions
+
+#### 2.2.2 Web Server Module
+- Provides video streaming interface
+- Provides photo capture API
+- Provides web interface
+
+#### 2.2.3 WiFi Communication Module
+- Responsible for WiFi connection
+- Provides network communication support
+
+---
+
+## III. Functional Module Detailed Design
+
+### 3.1 Web Video Streaming Display Function
+
+#### 3.1.1 Function Description
+Display video stream captured by ESP32-S3-CAM in real-time on the web, supporting basic video display functions.
+
+#### 3.1.2 Technical Implementation
+- Use MJPEG format for video streaming
+- Use multipart/x-mixed-replace protocol
+- Use ESP-IDF httpd component to implement HTTP server
+- Support video stream retry mechanism
+
+#### 3.1.3 API Interface
+```
+GET /stream
+```
+
+**Response Format:**
+```
+Content-Type: multipart/x-mixed-replace;boundary=123456789000000000000987654321
+
+--123456789000000000000987654321
+Content-Type: image/jpeg
+Content-Length: 12345
+X-Timestamp: 1234567890.123456
+
+[JPEG data]
+--123456789000000000000987654321
+...
+```
+
+#### 3.1.4 Key Parameters
+- **Resolution**: According to camera configuration
+- **JPEG Quality**: According to camera configuration
+
+#### 3.1.5 Code Structure
+```cpp
+// Video stream handler function
+static esp_err_t stream_handler(httpd_req_t *req) {
+    // Set response type
+    httpd_resp_set_type(req, _STREAM_CONTENT_TYPE);
+    
+    // Loop to send video frames
+    while (true) {
+        // Get camera frame
+        camera_fb_t *fb = esp_camera_fb_get();
+        
+        // Convert to JPEG format
+        // ...
+        
+        // Send frame data
+        httpd_resp_send_chunk(req, (const char *)_jpg_buf, _jpg_buf_len);
+        
+        // Release frame buffer
+        esp_camera_fb_return(fb);
+    }
+}
+```
+
+---
+
+### 3.2 Web Photo Capture Function
+
+#### 3.2.1 Function Description
+Control camera to capture photos on the web, obtaining current camera image.
+
+#### 3.2.2 Technical Implementation
+- Use ESP32 Camera Library to capture single frame image
+- Use JPEG format for encoding
+- Return image data through HTTP response
+
+#### 3.2.3 API Interface
+```
+GET /capture
+```
+
+**Response Format:**
+- Content-Type: image/jpeg
+- Response body: JPEG image data
+
+#### 3.2.4 Key Parameters
+- **Image Format**: JPEG
+- **Resolution**: According to camera configuration
+- **JPEG Quality**: According to camera configuration
+
+#### 3.2.5 Code Structure
+```cpp
+// Photo capture handler function
+static esp_err_t capture_handler(httpd_req_t *req) {
+    // Get camera frame
+    camera_fb_t *fb = esp_camera_fb_get();
+    
+    // Set response type
+    httpd_resp_set_type(req, "image/jpeg");
+    
+    // Send image data
+    httpd_resp_send(req, (const char *)fb->buf, fb->len);
+    
+    // Release frame buffer
+    esp_camera_fb_return(fb);
+    
+    return ESP_OK;
+}
+```
+
+---
+
+### 3.3 Open Video Stream in New Tab Function
+
+#### 3.3.1 Function Description
+Open video stream in a new tab, providing clearer video viewing experience.
+
+#### 3.3.2 Technical Implementation
+- Use JavaScript's window.open() function
+- Build complete video stream URL
+- Load video stream in new tab
+
+#### 3.3.3 Implementation Code
+```javascript
+function openStreamInNewTab() {
+    const streamUrl = 'http://' + window.location.hostname + ':81/stream';
+    window.open(streamUrl, '_blank');
+}
+```
+
+---
+
+## IV. Hardware Configuration
+
+### 4.1 Camera Configuration
+
+#### 4.1.1 OV5640 Camera Parameters
+```cpp
+#define CAMERA_MODEL_ESP32S3_EYE
+
+// Camera pin configuration
+#define PWDN_GPIO_NUM     -1
+#define RESET_GPIO_NUM    -1
+#define XCLK_GPIO_NUM     15
+#define SIOD_GPIO_NUM      4
+#define SIOC_GPIO_NUM      5
+
+#define Y9_GPIO_NUM       16
+#define Y8_GPIO_NUM       17
+#define Y7_GPIO_NUM       18
+#define Y6_GPIO_NUM       12
+#define Y5_GPIO_NUM       10
+#define Y4_GPIO_NUM        8
+#define Y3_GPIO_NUM        9
+#define Y2_GPIO_NUM       11
+
+#define VSYNC_GPIO_NUM     6
+#define HREF_GPIO_NUM      7
+#define PCLK_GPIO_NUM     13
+```
+
+#### 4.1.2 Camera Configuration Parameters
+```cpp
+camera_config_t config;
+config.ledc_channel = LEDC_CHANNEL_0;
+config.ledc_timer = LEDC_TIMER_0;
+config.pin_d0 = Y2_GPIO_NUM;
+config.pin_d1 = Y3_GPIO_NUM;
+config.pin_d2 = Y4_GPIO_NUM;
+config.pin_d3 = Y5_GPIO_NUM;
+config.pin_d4 = Y6_GPIO_NUM;
+config.pin_d5 = Y7_GPIO_NUM;
+config.pin_d6 = Y8_GPIO_NUM;
+config.pin_d7 = Y9_GPIO_NUM;
+config.pin_xclk = XCLK_GPIO_NUM;
+config.pin_pclk = PCLK_GPIO_NUM;
+config.pin_vsync = VSYNC_GPIO_NUM;
+config.pin_href = HREF_GPIO_NUM;
+config.pin_sscb_sda = SIOD_GPIO_NUM;
+config.pin_sscb_scl = SIOC_GPIO_NUM;
+config.pin_pwdn = PWDN_GPIO_NUM;
+config.pin_reset = RESET_GPIO_NUM;
+config.xclk_freq_hz = 22000000;  // 22MHz clock
+config.frame_size = FRAMESIZE_UXGA;
+config.pixel_format = PIXFORMAT_JPEG;
+config.grab_mode = CAMERA_GRAB_WHEN_EMPTY;
+config.fb_location = CAMERA_FB_IN_PSRAM;
+config.jpeg_quality = 12;
+config.fb_count = 1;
+
+// If PSRAM is available, use higher resolution and quality
+if(psramFound()){
+    config.jpeg_quality = 10;
+    config.fb_count = 2;
+    config.grab_mode = CAMERA_GRAB_LATEST;
+} else {
+    // Limit frame size when no PSRAM
+    config.frame_size = FRAMESIZE_SVGA;
+    config.fb_location = CAMERA_FB_IN_DRAM;
+}
+```
+
+#### 4.1.3 exFAT File System
+- ESP32-S3-CAM's SD card library supports exFAT file system by default
+- No additional configuration needed, use SD library directly
+- Supports large files (>4GB)
+
+---
+
+## V. Web Interface Design
+
+### 5.1 Interface Layout
+
+```
+┌─────────────────────────────────────────────────────────────┐
+│              ESP32-S3 Monitoring Console                    │
+├─────────────────────────────────────────────────────────────┤
+│  Language: [English ▼]  Theme: [Light ▼]                 │
+├─────────────────────────────────────────────────────────────┤
+│                                                             │
+│  ┌─────────────────────────────────────────────────────┐  │
+│  │                                                     │  │
+│  │              Video Display Area                      │  │
+│  │                                                     │  │
+│  └─────────────────────────────────────────────────────┘  │
+│                                                             │
+│  ┌─────────────────────────────────────────────────────┐  │
+│  │  [Capture Photo]  [Open Stream in New Tab]          │  │
+│  └─────────────────────────────────────────────────────┘  │
+│                                                             │
+└─────────────────────────────────────────────────────────────┘
+```
+
+### 5.2 Language and Theme Selection
+
+#### 5.2.1 Language Selection Function
+- **Supported Languages**: English, Chinese
+- **Default Language**: English
+- **Location**: Top-right corner of the page
+- **Persistence**: Use localStorage to save user selection
+- **Auto Restore**: Automatically restore last selected language on page load
+
+**Technical Implementation:**
+- Use JavaScript's translations object to store translations for all UI elements
+- Identify elements that need translation through data-lang attribute
+- Use changeLanguage() function to switch language
+- Use localStorage.setItem('preferredLanguage', currentLanguage) to save preference
+- Use localStorage.getItem('preferredLanguage') to restore preference
+
+**Translation Object Structure:**
+```javascript
+const translations = {
+    en: {
+        title: "ESP32-S3 Monitoring Console",
+        language: "Language",
+        theme: "Theme",
+        lightTheme: "Light",
+        darkTheme: "Dark",
+        liveVideo: "Live Video",
+        loadingStream: "Loading video stream...",
+        capturePhoto: "Capture Photo",
+        openStreamNewTab: "Open Stream in New Tab",
+        sdCardInfo: "SD Card Storage Info",
+        totalSpace: "Total Space",
+        usedSpace: "Used Space",
+        freeSpace: "Free Space",
+        systemUptime: "System Uptime",
+        uptimeUnit: "Uptime",
+        cameraSettings: "Camera Settings",
+        resolution: "Resolution",
+        imageQuality: "Image Quality",
+        lowQuality: "Low Quality (63)",
+        mediumQuality: "Medium Quality (31)",
+        highQuality: "High Quality (10)",
+        veryHighQuality: "Very High Quality (5)",
+        brightness: "Brightness",
+        contrast: "Contrast",
+        saturation: "Saturation"
+    },
+    zh: {
+        title: "ESP32-S3监控控制台",
+        language: "语言",
+        theme: "主题",
+        lightTheme: "浅色",
+        darkTheme: "深色",
+        liveVideo: "实时视频",
+        loadingStream: "正在加载视频流...",
+        capturePhoto: "拍照",
+        openStreamNewTab: "在新标签页中打开视频流",
+        sdCardInfo: "SD卡存储信息",
+        totalSpace: "总空间",
+        usedSpace: "已用空间",
+        freeSpace: "剩余空间",
+        systemUptime: "系统运行时长",
+        uptimeUnit: "运行时间",
+        cameraSettings: "摄像头设置",
+        resolution: "分辨率",
+        imageQuality: "图像质量",
+        lowQuality: "低质量 (63)",
+        mediumQuality: "中等质量 (31)",
+        highQuality: "高质量 (10)",
+        veryHighQuality: "极高质量 (5)",
+        brightness: "亮度",
+        contrast: "对比度",
+        saturation: "饱和度"
+    }
+};
+```
+
+#### 5.2.2 Theme Selection Function
+- **Supported Themes**: Light, Dark
+- **Default Theme**: Light
+- **Location**: Top-right corner of the page (next to language selector)
+- **Persistence**: Use localStorage to save user selection
+- **Auto Restore**: Automatically restore last selected theme on page load
+- **Transition Animation**: 0.3 seconds smooth transition
+
+**Technical Implementation:**
+- Use CSS variables to define theme colors
+- Switch theme through data-theme attribute
+- Use changeTheme() function to switch theme
+- Use localStorage.setItem('preferredTheme', currentTheme) to save preference
+- Use localStorage.getItem('preferredTheme') to restore preference
+
+**CSS Variable Definition:**
+```css
+:root {
+    /* Light theme variables */
+    --bg-color: #f5f5f5;
+    --container-bg: #ffffff;
+    --text-color: #333333;
+    --section-bg: #f9f9f9;
+    --section-title-color: #555555;
+    --border-color: #dddddd;
+    --btn-primary-bg: #007bff;
+    --btn-primary-hover: #0056b3;
+    --btn-success-bg: #28a745;
+    --btn-success-hover: #218838;
+    --btn-danger-bg: #dc3545;
+    --btn-danger-hover: #c82333;
+    --btn-warning-bg: #ffc107;
+    --btn-warning-hover: #e0a800;
+    --btn-warning-text: #212529;
+    --info-label-color: #666666;
+    --info-value-color: #333333;
+    --sd-info-value-color: #333333;
+    --sd-info-unit-color: #999999;
+    --setting-label-color: #666666;
+    --setting-border-color: #dddddd;
+    --setting-border-hover: #007bff;
+    --uptime-value-color: #333333;
+    --uptime-unit-color: #666666;
+    --language-label-color: #666666;
+    --loading-text-color: #666666;
+    --shadow-color: rgba(0, 0, 0, 0.1);
+}
+
+[data-theme="dark"] {
+    /* Dark theme variables */
+    --bg-color: #1a1a1a;
+    --container-bg: #2d2d2d;
+    --text-color: #e0e0e0;
+    --section-bg: #383838;
+    --section-title-color: #b0b0b0;
+    --border-color: #555555;
+    --btn-primary-bg: #007bff;
+    --btn-primary-hover: #0056b3;
+    --btn-success-bg: #28a745;
+    --btn-success-hover: #218838;
+    --btn-danger-bg: #dc3545;
+    --btn-danger-hover: #c82333;
+    --btn-warning-bg: #ffc107;
+    --btn-warning-hover: #e0a800;
+    --btn-warning-text: #212529;
+    --info-label-color: #b0b0b0;
+    --info-value-color: #e0e0e0;
+    --sd-info-value-color: #e0e0e0;
+    --sd-info-unit-color: #888888;
+    --setting-label-color: #b0b0b0;
+    --setting-border-color: #555555;
+    --setting-border-hover: #007bff;
+    --uptime-value-color: #e0e0e0;
+    --uptime-unit-color: #b0b0b0;
+    --language-label-color: #b0b0b0;
+    --loading-text-color: #b0b0b0;
+    --shadow-color: rgba(0, 0, 0, 0.3);
+}
+
+/* Global transition effect */
+* {
+    transition: background-color 0.3s, color 0.3s, border-color 0.3s;
+}
+```
+
+**Theme Switching Function:**
+```javascript
+function changeTheme() {
+    const themeSelect = document.getElementById('theme-select');
+    currentTheme = themeSelect.value;
+    
+    // Set data-theme attribute
+    if (currentTheme === 'dark') {
+        document.documentElement.setAttribute('data-theme', 'dark');
+    } else {
+        document.documentElement.removeAttribute('data-theme');
+    }
+    
+    // Save theme preference to localStorage
+    localStorage.setItem('preferredTheme', currentTheme);
+}
+```
+
+### 5.3 Function Buttons
+
+#### 5.3.1 Photo Capture Button
+- **Capture Photo**: Take a photo and open it in a new window
+
+#### 5.3.2 Video Stream Control Button
+- **Open Stream in New Tab**: Open video stream in a new tab
+
+### 5.4 Status Display
+- Video stream status
+- Photo capture status
+
+### 5.5 User Preference Persistence
+
+#### 5.5.1 LocalStorage Usage
+- **preferredLanguage**: Save user selected language ('en' or 'zh')
+- **preferredTheme**: Save user selected theme ('light' or 'dark')
+
+#### 5.5.2 Restore Preferences on Page Load
+```javascript
+// Restore language and theme preferences on page load
+window.onload = function() {
+    // Restore language preference
+    const savedLanguage = localStorage.getItem('preferredLanguage');
+    if (savedLanguage) {
+        document.getElementById('language-select').value = savedLanguage;
+        currentLanguage = savedLanguage;
+        changeLanguage();
+    }
+    
+    // Restore theme preference
+    const savedTheme = localStorage.getItem('preferredTheme');
+    if (savedTheme) {
+        document.getElementById('theme-select').value = savedTheme;
+        currentTheme = savedTheme;
+        changeTheme();
+    }
+};
+```
+
+---
+
+## VI. API Interface Documentation
+
+### 6.1 Video Stream Interface
+
+#### 6.1.1 Get Video Stream
+```
+GET /stream
+```
+
+**Response:**
+```
+Content-Type: multipart/x-mixed-replace;boundary=123456789000000000000987654321
+
+--123456789000000000000987654321
+Content-Type: image/jpeg
+Content-Length: 12345
+X-Timestamp: 1234567890.123456
+
+[JPEG data]
+--123456789000000000000987654321
+...
+```
+
+### 6.2 Photo Capture Interface
+
+#### 6.2.1 Capture Photo
+```
+GET /capture
+```
+
+**Response:**
+- Content-Type: image/jpeg
+- Response body: JPEG image data
+
+### 6.3 System Status Interface
+
+#### 6.3.1 Get System Status
+```
+GET /status
+```
+
+**Response:**
+```json
+{
+  "xclk": 22,
+  "pixformat": 3,
+  "framesize": 7,
+  "quality": 10,
+  "brightness": 1,
+  "contrast": 0,
+  "saturation": 0,
+  "sharpness": 0,
+  "special_effect": 0,
+  "wb_mode": 0,
+  "awb": 1,
+  "awb_gain": 1,
+  "aec": 1,
+  "aec2": 1,
+  "ae_level": 0,
+  "aec_value": 300,
+  "agc": 1,
+  "agc_gain": 0,
+  "gainceiling": 0,
+  "bpc": 0,
+  "wpc": 1,
+  "raw_gma": 1,
+  "lenc": 1,
+  "hmirror": 0,
+  "dcw": 1,
+  "colorbar": 0,
+  "led_intensity": -1
+}
+```
+
+---
+
+## VII. File Structure Design
+
+### 7.1 Project File Structure
+
+```
+ESP32-S3_Camera_Monitor/
+├── ESP32_S3_Camera_Monitor.ino      # Main program file
+├── camera_pins.h                    # Camera pin configuration
+├── camera_index.h                   # Web interface HTML
+├── app_httpd.cpp                    # HTTP server implementation
+├── partitions.csv                   # Partition table file
+├── readme/
+│   ├── PROJECT_REQUIREMENTS.md
+│   ├── TECHNOLOGY_STACK.md
+│   ├── DEVELOPMENT.md
+│   ├── IMPLEMENTATION.md
+│   ├── FEATURE_UPDATES.md
+│   └── examples/
+│       ├── Sketch_07.1_CameraWebServer.ino
+│       ├── app_httpd.cpp
+│       ├── camera_index.h
+│       ├── camera_pins.h
+│       └── partitions.csv
+```
+
+---
+
+## VIII. Configuration Parameters
+
+### 8.1 WiFi Configuration
+
+```cpp
+// WiFi configuration
+const char* ssid = "your-ssid";         // WiFi SSID
+const char* password = "your-password";  // WiFi password
+```
+
+### 8.2 Camera Configuration
+
+```cpp
+// Camera configuration
+#define CAMERA_MODEL_ESP32S3_EYE       // Camera model
+#define CAMERA_XCLK_FREQ 20000000     // Camera clock frequency: 22MHz
+#define CAMERA_FRAME_SIZE FRAMESIZE_UXGA  // Resolution: UXGA
+#define CAMERA_JPEG_QUALITY 12        // JPEG quality: 12 (1-31, lower is better)
+#define CAMERA_FB_COUNT 1             // Frame buffer count: 1
+
+// If PSRAM is available, use higher resolution and quality
+if(psramFound()){
+    config.jpeg_quality = 10;
+    config.fb_count = 2;
+    config.grab_mode = CAMERA_GRAB_LATEST;
+} else {
+    // Limit frame size when no PSRAM
+    config.frame_size = FRAMESIZE_SVGA;
+    config.fb_location = CAMERA_FB_IN_DRAM;
+}
+```
+
+---
+
+## IX. Error Handling Mechanism
+
+### 9.1 Camera Error Handling
+
+```cpp
+// Camera initialization failure
+if (esp_camera_init(&config) != ESP_OK) {
+    Serial.printf("Camera init failed with error 0x%x", err);
+    return;
+}
+
+// Frame capture failure
+camera_fb_t *fb = esp_camera_fb_get();
+if (!fb) {
+    ESP_LOGE(TAG, "Camera capture failed");
+    httpd_resp_send_500(req);
+    return ESP_FAIL;
+}
+```
+
+### 9.2 WiFi Error Handling
+
+```cpp
+// WiFi connection
+WiFi.begin(ssid, password);
+WiFi.setSleep(false);
+
+while (WiFi.status() != WL_CONNECTED) {
+    delay(500);
+    Serial.print(".");
+}
+Serial.println("");
+Serial.println("WiFi connected");
+```
+
+---
+
+## X. Performance Optimization
+
+### 10.1 Memory Optimization
+
+- Use PSRAM to store camera frame buffers
+- Reasonably set frame buffer count (2)
+- Release unused memory in time
+- Avoid memory leaks
+
+### 10.2 Performance Optimization
+
+- Optimize JPEG encoding quality to balance image quality and performance
+- Reasonably allocate CPU resources
+
+### 10.3 Network Optimization
+
+- Use WiFi keep-alive to avoid frequent reconnections
+- Support video stream retry mechanism
+
+---
+
+## XI. Test Plan
+
+### 11.1 Functional Testing
+
+#### 11.1.1 Video Stream Testing
+- Test if video stream displays normally
+- Test video stream retry mechanism
+- Test opening video stream in new tab function
+
+#### 11.1.2 Photo Capture Testing
+- Test if photo capture works normally
+- Test photo quality
+- Test photo capture response speed
+
+### 11.2 Stability Testing
+
+#### 11.2.1 Long-term Operation Testing
+- Test video stream long-term stability
+- Test WiFi connection stability
+- Test camera continuous operation stability
+
+---
+
+## XII. Deployment Instructions
+
+### 12.1 Development Environment Setup
+
+#### 12.1.1 Install Arduino IDE
+1. Download Arduino IDE 2.x
+2. Install ESP32 board support
+
+#### 12.1.2 Install Required Libraries
+```cpp
+// Install the following libraries in Arduino IDE:
+ArduinoJson
+```
+
+### 12.2 Compilation and Upload
+
+#### 12.2.1 Configure Board
+1. Select board: ESP32S3 Dev Module
+2. Configure partition scheme: Use provided partitions.csv
+3. Configure PSRAM: OPI PSRAM
+4. Configure Flash mode: QIO
+5. Configure Flash size: 8MB (according to actual hardware)
+
+#### 12.2.2 Compile and Upload
+1. Connect ESP32-S3-CAM to computer
+2. Select correct serial port
+3. Click upload button
+4. Wait for compilation and upload to complete
+
+### 12.3 First Boot
+
+1. Power on ESP32-S3-CAM
+2. Wait for WiFi connection
+3. Check serial output to get IP address
+4. Access IP address in browser
+5. Test video stream display function
+6. Test photo capture function
+7. Test opening video stream in new tab function
+
+---
+
+## XIII. Maintenance Instructions
+
+### 13.1 Daily Maintenance
+
+- Check system logs
+- Monitor device operation status
+
+### 13.2 Troubleshooting
+
+#### 13.2.1 Video Stream Not Displaying
+- Check WiFi connection
+- Check camera initialization
+- Check browser compatibility
+- Check network bandwidth
+
+#### 13.2.2 Photo Capture Failure
+- Check if camera is working normally
+- Check network connection
+
+### 13.3 Upgrade Instructions
+
+1. Download new firmware version
+2. Upload new firmware to ESP32-S3-CAM
+3. Test all functions
+
+---
+
+## XIV. Security Recommendations
+
+### 14.1 Network Security
+
+- Use strong WiFi password
+- Change WiFi password regularly
+- Consider using WPA3 encryption
+- Avoid using in public networks
+
+### 14.2 Data Security
+
+- Avoid exposing private information in video
+
+### 14.3 Physical Security
+
+- Ensure device is installed in a secure location
+- Avoid exposing device to harsh environments
+- Check device status regularly
+- Ensure stable power supply
+
+---
+
+## XV. Future Extensions
+
+### 15.1 Feature Extensions
+
+- Add SD card storage support
+- Add video recording function
+- Add servo control function
+- Add motion detection function
+
+### 15.2 Performance Extensions
+
+- Support higher resolution
+- Support higher frame rate
+- Optimize video streaming performance
+
+### 15.3 Interface Extensions
+
+- Optimize web interface
+- Add mobile device adaptation
+- Add more control functions
+
+---
+
 -----------------------------------------------------------------------------------------
 
 # ESP32-S3监控项目开发文档
