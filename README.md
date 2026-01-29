@@ -68,11 +68,6 @@ This project is modified from following open-source projects:
 
 2. **Install ESP32 Board Package**
    - Open Arduino IDE
-   - Go to File > Preferences
-   - Add this URL to "Additional Board Manager URLs":
-     ```
-     https://raw.githubusercontent.com/espressif/arduino-esp32/gh-pages/package_esp32_index.json
-     ```
    - Go to Tools > Board > Boards Manager
    - Search for "esp32" and install "esp32 by Espressif Systems"
 
@@ -251,11 +246,6 @@ The authors and GLM-4.7 are not liable for any damages arising from the use of t
 
 2. **安装ESP32开发板包**
    - 打开Arduino IDE
-   - 进入 File > Preferences
-   - 在"Additional Board Manager URLs"中添加以下URL：
-     ```
-     https://raw.githubusercontent.com/espressif/arduino-esp32/gh-pages/package_esp32_index.json
-     ```
    - 进入 Tools > Board > Boards Manager
    - 搜索"esp32"并安装"esp32 by Espressif Systems"
 
