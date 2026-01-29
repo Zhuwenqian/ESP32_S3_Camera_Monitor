@@ -1,64 +1,44 @@
-# Development Documentation / 开发文档
+# Development Documentation
 
-## License Information / 许可证信息
+## License Information
 
 This project is licensed under Creative Commons Attribution-NonCommercial-ShareAlike 3.0 Unported License (CC BY-NC-SA 3.0)
 
-本项目采用 Creative Commons Attribution-NonCommercial-ShareAlike 3.0 Unported License (CC BY-NC-SA 3.0)
+### Important Restrictions
 
-### Important Restrictions / 重要限制
-
-- ❌ **Commercial Use Prohibited / 禁止商业用途**: This project cannot be used for any commercial purposes / 本项目不能用于任何商业目的
-- ✅ **Non-Commercial Use Allowed / 允许非商业用途**: Personal learning, research, education, and other non-commercial purposes / 个人学习、研究、教育等非商业用途
-- ✅ **Modification and Distribution Allowed / 允许修改和分发**: But must use the same license / 但必须使用相同的许可证
-- ✅ **Attribution Required / 必须署名**: Must retain the original author's attribution / 必须保留原作者的署名
+- ❌ **Commercial Use Prohibited**: This project cannot be used for any commercial purposes 
+- ✅ **Non-Commercial Use Allowed **: Personal learning, research, education, and other non-commercial purposes
+- ✅ **Modification and Distribution Allowed**: But must use the same license
+- ✅ **Attribution Required**: Must retain the original author's attribution
 
 For details, please visit: https://creativecommons.org/licenses/by-nc-sa/3.0/
-详情请查看：https://creativecommons.org/licenses/by-nc-sa/3.0/
 
-## Code Sources / 代码来源
+## Code Sources
 
 This project is modified from the following open-source projects:
-本项目基于以下开源项目修改而来：
 - Freenove ESP32-S3 Camera Example (CC BY-NC-SA 3.0)
-- Espressif Camera Library Example (Apache License 2.0) - from Arduino ESP32 Board Package / 来自 Arduino ESP32 Board Package
+- Espressif Camera Library Example (Apache License 2.0) - from Arduino ESP32 Board Package
 
 ---
 
-## Project Overview / 项目概述
+## Project Overview
 
-### 1.1 Project Background / 项目背景
+### 1.1 Project Background
 This project is based on the ESP32-S3-CAM (Guoyun version) development board, implementing a basic network video monitoring system. The system supports real-time video streaming and photo capture, suitable for home monitoring, security monitoring, and other scenarios.
-本项目基于ESP32-S3-CAM(果云版)开发板，实现一个基础的网络视频监控系统。系统支持实时视频流传输和拍照功能，适用于家庭监控、安防监控等场景。
 
-### 1.2 Project Goals / 项目目标
-- Implement real-time video streaming display on the Web / 实现Web端实时视频流显示
-- Implement photo capture control on the Web / 实现Web端控制拍照功能
-- Implement opening video streaming in a new tab / 实现在新标签页中打开视频流功能
-- Implement basic HTTP server / 实现基础HTTP服务器
+### 1.2 Project Goals
+- Implement real-time video streaming display on the Web
+- Implement photo capture control on the Web
+- Implement opening video streaming in a new tab
+- Implement basic HTTP server
 
-### 1.3 Technology Stack / 技术栈
-- **Development Framework / 开发框架**: Arduino Framework / Arduino框架
-- **Camera Driver / 摄像头驱动**: ESP32 Camera Library (Official) / ESP32 Camera库（官方）
-- **Web Server / Web服务器**: ESP-IDF httpd component / ESP-IDF的httpd组件
-- **Video Encoding / 视频编码**: MJPEG
+### 1.3 Technology Stack
+- **Development Framework**: Arduino Framework
+- **Camera Driver**: ESP32 Camera Library (Official)
+- **Web Server**: ESP-IDF httpd component
+- **Video Encoding**: MJPEG
 
----
-
-
----
-
-
----
-
-
----
-
-
----
-
-
----
+-----------------------------------------------------------------------------------------
 
 # ESP32-S3监控项目开发文档
 
@@ -374,6 +354,8 @@ if(psramFound()){
 ┌─────────────────────────────────────────────────────────────┐
 │                    ESP32-S3监控控制台                        │
 ├─────────────────────────────────────────────────────────────┤
+│  语言: [English ▼]  主题: [Light ▼]                        │
+├─────────────────────────────────────────────────────────────┤
 │                                                             │
 │  ┌─────────────────────────────────────────────────────┐  │
 │  │                                                     │  │
@@ -388,17 +370,224 @@ if(psramFound()){
 └─────────────────────────────────────────────────────────────┘
 ```
 
-### 5.2 功能按钮
+### 5.2 语言和主题选择
 
-#### 5.2.1 拍照控制按钮
+#### 5.2.1 语言选择功能
+- **支持语言**：English（英语）、中文
+- **默认语言**：English
+- **位置**：页面右上角
+- **持久化**：使用localStorage保存用户选择
+- **自动恢复**：页面加载时自动恢复上次选择的语言
+
+**技术实现：**
+- 使用JavaScript的translations对象存储所有UI元素的翻译
+- 通过data-lang属性标识需要翻译的元素
+- 使用changeLanguage()函数切换语言
+- 使用localStorage.setItem('preferredLanguage', currentLanguage)保存偏好
+- 使用localStorage.getItem('preferredLanguage')恢复偏好
+
+**翻译对象结构：**
+```javascript
+const translations = {
+    en: {
+        title: "ESP32-S3 Monitoring Console",
+        language: "Language",
+        theme: "Theme",
+        lightTheme: "Light",
+        darkTheme: "Dark",
+        liveVideo: "Live Video",
+        loadingStream: "Loading video stream...",
+        capturePhoto: "Capture Photo",
+        openStreamNewTab: "Open Stream in New Tab",
+        sdCardInfo: "SD Card Storage Info",
+        totalSpace: "Total Space",
+        usedSpace: "Used Space",
+        freeSpace: "Free Space",
+        systemUptime: "System Uptime",
+        uptimeUnit: "Uptime",
+        cameraSettings: "Camera Settings",
+        resolution: "Resolution",
+        imageQuality: "Image Quality",
+        lowQuality: "Low Quality (63)",
+        mediumQuality: "Medium Quality (31)",
+        highQuality: "High Quality (10)",
+        veryHighQuality: "Very High Quality (5)",
+        brightness: "Brightness",
+        contrast: "Contrast",
+        saturation: "Saturation"
+    },
+    zh: {
+        title: "ESP32-S3监控控制台",
+        language: "语言",
+        theme: "主题",
+        lightTheme: "浅色",
+        darkTheme: "深色",
+        liveVideo: "实时视频",
+        loadingStream: "正在加载视频流...",
+        capturePhoto: "拍照",
+        openStreamNewTab: "在新标签页中打开视频流",
+        sdCardInfo: "SD卡存储信息",
+        totalSpace: "总空间",
+        usedSpace: "已用空间",
+        freeSpace: "剩余空间",
+        systemUptime: "系统运行时长",
+        uptimeUnit: "运行时间",
+        cameraSettings: "摄像头设置",
+        resolution: "分辨率",
+        imageQuality: "图像质量",
+        lowQuality: "低质量 (63)",
+        mediumQuality: "中等质量 (31)",
+        highQuality: "高质量 (10)",
+        veryHighQuality: "极高质量 (5)",
+        brightness: "亮度",
+        contrast: "对比度",
+        saturation: "饱和度"
+    }
+};
+```
+
+#### 5.2.2 主题选择功能
+- **支持主题**：Light（浅色）、Dark（深色）
+- **默认主题**：Light
+- **位置**：页面右上角（语言选择器旁边）
+- **持久化**：使用localStorage保存用户选择
+- **自动恢复**：页面加载时自动恢复上次选择的主题
+- **过渡动画**：0.3秒平滑过渡
+
+**技术实现：**
+- 使用CSS变量定义主题颜色
+- 通过data-theme属性切换主题
+- 使用changeTheme()函数切换主题
+- 使用localStorage.setItem('preferredTheme', currentTheme)保存偏好
+- 使用localStorage.getItem('preferredTheme')恢复偏好
+
+**CSS变量定义：**
+```css
+:root {
+    /* 浅色主题变量 / Light theme variables */
+    --bg-color: #f5f5f5;
+    --container-bg: #ffffff;
+    --text-color: #333333;
+    --section-bg: #f9f9f9;
+    --section-title-color: #555555;
+    --border-color: #dddddd;
+    --btn-primary-bg: #007bff;
+    --btn-primary-hover: #0056b3;
+    --btn-success-bg: #28a745;
+    --btn-success-hover: #218838;
+    --btn-danger-bg: #dc3545;
+    --btn-danger-hover: #c82333;
+    --btn-warning-bg: #ffc107;
+    --btn-warning-hover: #e0a800;
+    --btn-warning-text: #212529;
+    --info-label-color: #666666;
+    --info-value-color: #333333;
+    --sd-info-value-color: #333333;
+    --sd-info-unit-color: #999999;
+    --setting-label-color: #666666;
+    --setting-border-color: #dddddd;
+    --setting-border-hover: #007bff;
+    --uptime-value-color: #333333;
+    --uptime-unit-color: #666666;
+    --language-label-color: #666666;
+    --loading-text-color: #666666;
+    --shadow-color: rgba(0, 0, 0, 0.1);
+}
+
+[data-theme="dark"] {
+    /* 深色主题变量 / Dark theme variables */
+    --bg-color: #1a1a1a;
+    --container-bg: #2d2d2d;
+    --text-color: #e0e0e0;
+    --section-bg: #383838;
+    --section-title-color: #b0b0b0;
+    --border-color: #555555;
+    --btn-primary-bg: #007bff;
+    --btn-primary-hover: #0056b3;
+    --btn-success-bg: #28a745;
+    --btn-success-hover: #218838;
+    --btn-danger-bg: #dc3545;
+    --btn-danger-hover: #c82333;
+    --btn-warning-bg: #ffc107;
+    --btn-warning-hover: #e0a800;
+    --btn-warning-text: #212529;
+    --info-label-color: #b0b0b0;
+    --info-value-color: #e0e0e0;
+    --sd-info-value-color: #e0e0e0;
+    --sd-info-unit-color: #888888;
+    --setting-label-color: #b0b0b0;
+    --setting-border-color: #555555;
+    --setting-border-hover: #007bff;
+    --uptime-value-color: #e0e0e0;
+    --uptime-unit-color: #b0b0b0;
+    --language-label-color: #b0b0b0;
+    --loading-text-color: #b0b0b0;
+    --shadow-color: rgba(0, 0, 0, 0.3);
+}
+
+/* 全局过渡效果 / Global transition effect */
+* {
+    transition: background-color 0.3s, color 0.3s, border-color 0.3s;
+}
+```
+
+**主题切换函数：**
+```javascript
+function changeTheme() {
+    const themeSelect = document.getElementById('theme-select');
+    currentTheme = themeSelect.value;
+    
+    // 设置data-theme属性 / Set data-theme attribute
+    if (currentTheme === 'dark') {
+        document.documentElement.setAttribute('data-theme', 'dark');
+    } else {
+        document.documentElement.removeAttribute('data-theme');
+    }
+    
+    // 保存主题偏好到localStorage / Save theme preference to localStorage
+    localStorage.setItem('preferredTheme', currentTheme);
+}
+```
+
+### 5.3 功能按钮
+
+#### 5.3.1 拍照控制按钮
 - **拍照**：拍摄一张照片，在新窗口打开
 
-#### 5.2.2 视频流控制按钮
+#### 5.3.2 视频流控制按钮
 - **在新标签页中打开视频流**：在新标签页中打开视频流
 
-### 5.3 状态显示
+### 5.4 状态显示
 - 视频流状态
 - 拍照状态
+
+### 5.5 用户偏好持久化
+
+#### 5.5.1 LocalStorage使用
+- **preferredLanguage**：保存用户选择的语言（'en'或'zh'）
+- **preferredTheme**：保存用户选择的主题（'light'或'dark'）
+
+#### 5.5.2 页面加载时恢复偏好
+```javascript
+// 页面加载时恢复语言和主题偏好 / Restore language and theme preferences on page load
+window.onload = function() {
+    // 恢复语言偏好 / Restore language preference
+    const savedLanguage = localStorage.getItem('preferredLanguage');
+    if (savedLanguage) {
+        document.getElementById('language-select').value = savedLanguage;
+        currentLanguage = savedLanguage;
+        changeLanguage();
+    }
+    
+    // 恢复主题偏好 / Restore theme preference
+    const savedTheme = localStorage.getItem('preferredTheme');
+    if (savedTheme) {
+        document.getElementById('theme-select').value = savedTheme;
+        currentTheme = savedTheme;
+        changeTheme();
+    }
+};
+```
 
 ---
 
@@ -734,6 +923,6 @@ ArduinoJson
 
 ---
 
-**文档版本：** 1.1
+**文档版本：** 1.2
 **创建日期：** 2026-01-26
-**最后更新：** 2026-01-27
+**最后更新：** 2026-01-29
