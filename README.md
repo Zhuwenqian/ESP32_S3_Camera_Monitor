@@ -222,7 +222,7 @@ The authors and GLM-4.7 are not liable for any damages arising from the use of t
 
 ## 硬件要求
 
-- ESP32-S3-CAM果云版开发板或ESP32-S3 WROVER Board (Freenove)**It is recommended to use 8-16MB PSRAM**
+- ESP32-S3-CAM果云版开发板或ESP32-S3 WROVER Board (Freenove)**建议8-16MB PSRAM**
 - OV5640摄像头或其他支持ESP32-S3的摄像头
 - SD卡（建议64GB或更大）
 - SG-90舵机（可选，用于云台控制）
@@ -232,11 +232,11 @@ The authors and GLM-4.7 are not liable for any damages arising from the use of t
 ### 第一步：硬件准备
 
 **国内用户：**
-- 使用 ESP32-S3-CAM（果云版）**It is recommended to use 8-16MB PSRAM**
+- 使用 ESP32-S3-CAM（果云版）**建议8-16MB PSRAM**
 - 确保摄像头模块正确连接
 
 **国外用户：**
-- 使用 ESP32-S3 WROVER Board **It is recommended to use 8-16MB PSRAM**
+- 使用 ESP32-S3 WROVER Board **建议8-16MB PSRAM**
 - 确保摄像头模块正确连接
 
 ### 第二步：软件设置
