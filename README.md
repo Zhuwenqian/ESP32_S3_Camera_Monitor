@@ -44,7 +44,7 @@ This project is modified from following open-source projects:
 
 ## Hardware Requirements
 
-- ESP32-S3-CAM(GOOUUU version) development board or ESP32-S3 WROVER Board (Freenove)
+- ESP32-S3-CAM(GOOUUU version) development board or ESP32-S3 WROVER Board (Freenove) **It is recommended to use 8-16MB PSRAM**
 - OV5640 camera or other cameras supporting ESP32-S3
 - SD card (64GB or larger recommended)
 - SG-90 servo (optional, for pan-tilt control)
@@ -54,11 +54,11 @@ This project is modified from following open-source projects:
 ### Step 1: Hardware Preparation
 
 **For Users in China:**
-- Use ESP32-S3-CAM (GOOUUU version / 果云版)
+- Use ESP32-S3-CAM (GOOUUU version / 果云版) **It is recommended to use 8-16MB PSRAM**
 - Ensure the camera module is properly connected
 
 **For International Users:**
-- Use ESP32-S3 WROVER Board
+- Use ESP32-S3 WROVER Board **It is recommended to use 8-16MB PSRAM**
 - Ensure the camera module is properly connected
 
 ### Step 2: Software Setup
