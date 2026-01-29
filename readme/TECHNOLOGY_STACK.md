@@ -105,6 +105,7 @@ Based on project requirements analysis, the following technology stack is recomm
 
 ### 4.1 IDE
 - **Arduino IDE 2.x** - Simple and easy to use, suitable for beginners
+- **TRAE**-Code 
 
 ### 4.2 Compiler
 - **xtensa-esp32s3-elf-gcc** - ESP32-S3 official compiler
