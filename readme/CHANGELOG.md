@@ -28,6 +28,98 @@ This project is modified from the following open-source projects:
 
 ## Update Log
 
+### 2026-01-29 - Added Language and Theme Selection Features
+**Updates:**
+- Added language selection functionality (English and Chinese)
+- Added theme selection functionality (Light and Dark themes)
+- Implemented bilingual support for all UI elements
+- Implemented smooth theme transition animations (0.3 seconds)
+- Added localStorage support for language and theme preferences
+- Set default language to English
+- Set default theme to Light
+
+**Modified Files:**
+1. camera_index.h - Added language and theme selection UI, CSS variables, JavaScript functions
+
+**Implemented Features:**
+1. Language Selection:
+   - Supports English and Chinese switching
+   - Default language: English
+   - Language selector in top-right corner
+   - All UI elements support bilingual display
+   - Language preference saved to localStorage
+   - Automatic language restoration on page load
+
+2. Theme Selection:
+   - Supports Light and Dark themes
+   - Default theme: Light
+   - Theme selector in top-right corner (next to language selector)
+   - CSS variables for easy theme switching
+   - Smooth transition animations (0.3 seconds)
+   - Theme preference saved to localStorage
+   - Automatic theme restoration on page load
+
+3. Technical Implementation:
+   - Uses CSS custom properties (variables) for theme colors
+   - Uses data-theme attribute to control theme application
+   - Uses data-lang attributes for language switching
+   - JavaScript functions: changeLanguage(), initializeLanguage(), changeTheme(), initializeTheme()
+   - Comprehensive translation object for all UI text
+   - Responsive design, language and theme selectors work on all screen sizes
+
+**UI Elements Translated:**
+- Title: ESP32-S3 Monitoring Console / ESP32-S3监控控制台
+- Language label: Language / 语言
+- Theme label: Theme / 主题
+- Light theme option: Light / 浅色
+- Dark theme option: Dark / 深色
+- Live Video: Live Video / 实时视频
+- Loading stream: Loading video stream... / 正在加载视频流...
+- Capture Photo: Capture Photo / 拍照
+- Open Stream in New Tab: Open Stream in New Tab / 在新标签页中打开视频流
+- SD Card Storage Info: SD Card Storage Info / SD卡存储信息
+- Total Space: Total Space / 总空间
+- Used Space: Used Space / 已用空间
+- Free Space: Free Space / 剩余空间
+- System Uptime: System Uptime / 系统运行时长
+- Uptime: Uptime / 运行时间
+- Camera Settings: Camera Settings / 摄像头设置
+- Resolution: Resolution / 分辨率
+- Image Quality: Image Quality / 图像质量
+- Low Quality: Low Quality (63) / 低质量 (63)
+- Medium Quality: Medium Quality (31) / 中等质量 (31)
+- High Quality: High Quality (10) / 高质量 (10)
+- Very High Quality: Very High Quality (5) / 极高质量 (5)
+- Brightness: Brightness / 亮度
+- Contrast: Contrast / 对比度
+- Saturation: Saturation / 饱和度
+
+**Theme Colors:**
+Light Theme:
+- Background: #f5f5f5
+- Container: #ffffff
+- Text: #333333
+- Section: #f9f9f9
+- Border: #dddddd
+- Shadow: rgba(0, 0, 0, 0.1)
+
+Dark Theme:
+- Background: #1a1a1a
+- Container: #2d2d2d
+- Text: #e0e0e0
+- Section: #383838
+- Border: #555555
+- Shadow: rgba(0, 0, 0, 0.3)
+
+**Next Steps:**
+- Test language switching functionality
+- Test theme switching functionality
+- Test localStorage persistence
+- Test responsive design on different devices
+- Optimize performance for low-end devices
+
+---
+
 ### 2026-01-28 - Added HTTP Basic Authentication and Session Management
 **Updates:**
 - Created authentication module (auth.h and auth.cpp)
