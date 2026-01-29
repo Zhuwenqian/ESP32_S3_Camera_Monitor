@@ -28,6 +28,87 @@ This project is modified from the following open-source projects:
 
 ## Update Log
 
+### 2026-01-29 - Added Invalid Video File Cleanup Function
+**Updates:**
+- Added automatic cleanup function for invalid video files (0KB files)
+- System automatically checks and deletes 0KB video files on startup
+- Improved system reliability by cleaning up corrupted video files
+
+**Modified Files:**
+1. sd_read_write.h - Added cleanInvalidVideoFiles() function declaration
+2. sd_read_write.cpp - Implemented cleanInvalidVideoFiles() function
+3. ESP32_S3_Camera_Monitor.ino - Added cleanup call in setup function
+
+**Implemented Features:**
+1. Invalid Video File Cleanup:
+   - Automatically scans videos directory on system startup
+   - Identifies video files with 0KB size
+   - Deletes all invalid video files
+   - Reports cleanup results via Serial output
+
+2. Technical Implementation:
+   - Function: cleanInvalidVideoFiles()
+   - Location: Called after SD card initialization and directory setup
+   - Returns: Number of deleted files (or -1 on error)
+   - Error handling: Comprehensive error checking and reporting
+
+3. Cleanup Process:
+   - Opens videos directory
+   - Iterates through all files
+   - Checks file size (file.size() == 0)
+   - Deletes files with 0KB size
+   - Outputs cleanup summary
+
+**Cleanup Results:**
+- Success: Reports number of deleted files
+- No invalid files: Reports "No invalid video files found"
+- Error: Reports failure and returns -1
+
+**Next Steps:**
+- Test cleanup function with various scenarios
+- Monitor system behavior after cleanup
+- Optimize cleanup performance if needed
+
+---
+
+### 2026-01-29 - Adjusted Default Camera Parameters
+**Updates:**
+- Changed camera default resolution from SVGA (1280x720) to XGA (1024x768)
+- Changed video recording default frame rate from 15fps to 20fps
+- Changed video recording default resolution from 1280x720 to 1024x768
+
+**Modified Files:**
+1. ESP32_S3_Camera_Monitor.ino - Updated camera configuration and video recording parameters
+
+**Technical Changes:**
+- Camera default resolution: FRAMESIZE_XGA (1024x768)
+  - Previous: FRAMESIZE_SVGA (1280x720)
+  - Effect: Lower resolution, better performance, reduced storage usage
+- Video recording frame rate: 20fps
+  - Previous: 15fps
+  - Effect: Smoother video, more frames per second
+- Video recording resolution: 1024x768
+  - Previous: 1280x720
+  - Effect: Consistent with camera resolution, optimized storage
+
+**Parameter Adjustments:**
+- Camera frame size (config.frame_size): FRAMESIZE_XGA
+  - Resolution: 1024x768 pixels
+  - Effect: Balanced quality and performance
+- Video recording frame rate: 20fps
+  - Frame interval: 50ms (1000/20)
+  - Effect: Smoother video playback
+- Video recording resolution: 1024x768
+  - Consistent with camera resolution
+  - Effect: No scaling required, better quality
+
+**Next Steps:**
+- Test video recording with new parameters
+- Monitor storage usage
+- Adjust parameters if needed
+
+---
+
 ### 2026-01-29 - Added Language and Theme Selection Features
 **Updates:**
 - Added language selection functionality (English and Chinese)

@@ -292,7 +292,7 @@ if(psramFound()){
     config.grab_mode = CAMERA_GRAB_LATEST;
 } else {
     // Limit frame size when no PSRAM
-    config.frame_size = FRAMESIZE_SVGA;
+    config.frame_size = FRAMESIZE_XGA;
     config.fb_location = CAMERA_FB_IN_DRAM;
 }
 ```
@@ -679,7 +679,7 @@ if(psramFound()){
     config.grab_mode = CAMERA_GRAB_LATEST;
 } else {
     // Limit frame size when no PSRAM
-    config.frame_size = FRAMESIZE_SVGA;
+    config.frame_size = FRAMESIZE_XGA;
     config.fb_location = CAMERA_FB_IN_DRAM;
 }
 ```
@@ -814,6 +814,9 @@ ArduinoJson
 
 - Check system logs
 - Monitor device operation status
+- Monitor SD card storage space
+- System automatically cleans up invalid video files (0KB) on startup
+- Regularly check video recording quality and file integrity
 
 ### 13.2 Troubleshooting
 
@@ -1176,7 +1179,7 @@ if(psramFound()){
     config.grab_mode = CAMERA_GRAB_LATEST;
 } else {
     // 没有PSRAM时限制帧大小
-    config.frame_size = FRAMESIZE_SVGA;
+    config.frame_size = FRAMESIZE_XGA;
     config.fb_location = CAMERA_FB_IN_DRAM;
 }
 ```
@@ -1563,7 +1566,7 @@ if(psramFound()){
     config.grab_mode = CAMERA_GRAB_LATEST;
 } else {
     // 没有PSRAM时限制帧大小
-    config.frame_size = FRAMESIZE_SVGA;
+    config.frame_size = FRAMESIZE_XGA;
     config.fb_location = CAMERA_FB_IN_DRAM;
 }
 ```
@@ -1699,6 +1702,9 @@ ArduinoJson
 
 - 检查系统日志
 - 监控设备运行状态
+- 监控SD卡存储空间
+- 系统启动时自动清理无效视频文件（大小为0KB）
+- 定期检查视频录制质量和文件完整性
 
 ### 13.2 故障排查
 

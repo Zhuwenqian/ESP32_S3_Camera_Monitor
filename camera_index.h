@@ -12,6 +12,7 @@
  * 4. 运行时长区域：显示系统运行时长（HH:MM:SS格式）/ Uptime area: displays system uptime (HH:MM:SS format)
  * 5. 摄像头设置区域：调节分辨率、图像质量、亮度、对比度、饱和度 / Camera settings area: adjusts resolution, quality, brightness, contrast, saturation
  * 6. 语言选择功能：支持英语和中文切换，默认为英语 / Language selection: supports English and Chinese switching, default is English
+ * 7. 主题选择功能：支持深色和浅色主题切换，默认为浅色 / Theme selection: supports dark and light theme switching, default is light
  * 
  * 技术实现 / Technical Implementation:
  * - 使用HTML5和CSS3构建界面 / Uses HTML5 and CSS3 to build the interface
@@ -20,7 +21,10 @@
  * - 支持响应式设计 / Supports responsive design
  * - 支持实时状态更新 / Supports real-time status updates
  * - 使用localStorage保存语言偏好 / Uses localStorage to save language preference
+ * - 使用localStorage保存主题偏好 / Uses localStorage to save theme preference
  * - 使用data-lang属性实现多语言切换 / Uses data-lang attributes for multi-language switching
+ * - 使用CSS变量实现主题切换 / Uses CSS variables for theme switching
+ * - 使用data-theme属性控制主题 / Uses data-theme attribute to control theme
  * 
  * 界面特点 / Interface Features:
  * - 简洁美观的UI设计 / Clean and beautiful UI design
@@ -31,6 +35,9 @@
  * - 视频流加载状态显示 / Video stream loading status display
  * - 双语支持（英语和中文）/ Bilingual support (English and Chinese)
  * - 语言偏好记忆功能 / Language preference memory
+ * - 深色/浅色主题支持 / Dark/Light theme support
+ * - 主题偏好记忆功能 / Theme preference memory
+ * - 平滑的主题切换动画 / Smooth theme transition animation
  * 
  * 创建日期 / Creation Date : 2026-01-26
  * 最后更新 / Last Update : 2026-01-29
@@ -52,6 +59,11 @@
  * 15. 添加语言选择功能（英语和中文，默认英语）/ Added language selection (English and Chinese, default is English)
  * 16. 使用localStorage保存用户语言偏好 / Uses localStorage to save user language preference
  * 17. 实现页面加载时自动应用保存的语言 / Implements automatic application of saved language on page load
+ * 18. 添加主题选择功能（深色和浅色，默认浅色）/ Added theme selection (dark and light, default is light)
+ * 19. 使用CSS变量实现深色和浅色主题 / Uses CSS variables for dark and light themes
+ * 20. 使用localStorage保存用户主题偏好 / Uses localStorage to save user theme preference
+ * 21. 实现页面加载时自动应用保存的主题 / Implements automatic application of saved theme on page load
+ * 22. 添加平滑的主题切换过渡动画（0.3秒）/ Added smooth theme transition animation (0.3 seconds)
  */
 
 // Web界面HTML代码 / Web interface HTML code
@@ -63,6 +75,68 @@ const char index_ov2640_html[] = R"rawliteral(
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>ESP32-S3监控控制台</title>
     <style>
+        :root {
+            /* 浅色主题变量 / Light theme variables */
+            --bg-color: #f5f5f5;
+            --container-bg: #ffffff;
+            --text-color: #333333;
+            --section-bg: #f9f9f9;
+            --section-title-color: #555555;
+            --border-color: #dddddd;
+            --btn-primary-bg: #007bff;
+            --btn-primary-hover: #0056b3;
+            --btn-success-bg: #28a745;
+            --btn-success-hover: #218838;
+            --btn-danger-bg: #dc3545;
+            --btn-danger-hover: #c82333;
+            --btn-warning-bg: #ffc107;
+            --btn-warning-hover: #e0a800;
+            --btn-warning-text: #212529;
+            --info-label-color: #666666;
+            --info-value-color: #333333;
+            --sd-info-value-color: #333333;
+            --sd-info-unit-color: #999999;
+            --setting-label-color: #666666;
+            --setting-border-color: #dddddd;
+            --setting-border-hover: #007bff;
+            --uptime-value-color: #333333;
+            --uptime-unit-color: #666666;
+            --language-label-color: #666666;
+            --loading-text-color: #666666;
+            --shadow-color: rgba(0, 0, 0, 0.1);
+        }
+        
+        [data-theme="dark"] {
+            /* 深色主题变量 / Dark theme variables */
+            --bg-color: #1a1a1a;
+            --container-bg: #2d2d2d;
+            --text-color: #e0e0e0;
+            --section-bg: #383838;
+            --section-title-color: #b0b0b0;
+            --border-color: #555555;
+            --btn-primary-bg: #007bff;
+            --btn-primary-hover: #0056b3;
+            --btn-success-bg: #28a745;
+            --btn-success-hover: #218838;
+            --btn-danger-bg: #dc3545;
+            --btn-danger-hover: #c82333;
+            --btn-warning-bg: #ffc107;
+            --btn-warning-hover: #e0a800;
+            --btn-warning-text: #212529;
+            --info-label-color: #b0b0b0;
+            --info-value-color: #e0e0e0;
+            --sd-info-value-color: #e0e0e0;
+            --sd-info-unit-color: #888888;
+            --setting-label-color: #b0b0b0;
+            --setting-border-color: #555555;
+            --setting-border-hover: #007bff;
+            --uptime-value-color: #e0e0e0;
+            --uptime-unit-color: #b0b0b0;
+            --language-label-color: #b0b0b0;
+            --loading-text-color: #b0b0b0;
+            --shadow-color: rgba(0, 0, 0, 0.3);
+        }
+        
         * {
             margin: 0;
             padding: 0;
@@ -71,37 +145,42 @@ const char index_ov2640_html[] = R"rawliteral(
         
         body {
             font-family: Arial, sans-serif;
-            background-color: #f5f5f5;
+            background-color: var(--bg-color);
             padding: 20px;
+            transition: background-color 0.3s ease;
         }
         
         .container {
             max-width: 1200px;
             margin: 0 auto;
-            background-color: white;
+            background-color: var(--container-bg);
             padding: 20px;
             border-radius: 10px;
-            box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
+            box-shadow: 0 2px 10px var(--shadow-color);
+            transition: background-color 0.3s ease, box-shadow 0.3s ease;
         }
         
         h1 {
             text-align: center;
-            color: #333;
+            color: var(--text-color);
             margin-bottom: 30px;
+            transition: color 0.3s ease;
         }
         
         .control-section {
             margin-bottom: 30px;
             padding: 20px;
-            background-color: #f9f9f9;
+            background-color: var(--section-bg);
             border-radius: 5px;
+            transition: background-color 0.3s ease;
         }
         
         .section-title {
             font-size: 18px;
             font-weight: bold;
-            color: #555;
+            color: var(--section-title-color);
             margin-bottom: 15px;
+            transition: color 0.3s ease;
         }
         
         .video-container {
@@ -111,8 +190,9 @@ const char index_ov2640_html[] = R"rawliteral(
         #stream {
             max-width: 100%;
             height: auto;
-            border: 2px solid #ddd;
+            border: 2px solid var(--border-color);
             border-radius: 5px;
+            transition: border-color 0.3s ease;
         }
         
         .control-buttons {
@@ -123,59 +203,63 @@ const char index_ov2640_html[] = R"rawliteral(
         }
         
         .btn-primary {
-            background-color: #007bff;
+            background-color: var(--btn-primary-bg);
             color: white;
             border: none;
             padding: 10px 20px;
             border-radius: 5px;
             cursor: pointer;
             font-size: 14px;
+            transition: background-color 0.3s ease;
         }
         
         .btn-primary:hover {
-            background-color: #0056b3;
+            background-color: var(--btn-primary-hover);
         }
         
         .btn-success {
-            background-color: #28a745;
+            background-color: var(--btn-success-bg);
             color: white;
             border: none;
             padding: 10px 20px;
             border-radius: 5px;
             cursor: pointer;
             font-size: 14px;
+            transition: background-color 0.3s ease;
         }
         
         .btn-success:hover {
-            background-color: #218838;
+            background-color: var(--btn-success-hover);
         }
         
         .btn-danger {
-            background-color: #dc3545;
+            background-color: var(--btn-danger-bg);
             color: white;
             border: none;
             padding: 10px 20px;
             border-radius: 5px;
             cursor: pointer;
             font-size: 14px;
+            transition: background-color 0.3s ease;
         }
         
         .btn-danger:hover {
-            background-color: #c82333;
+            background-color: var(--btn-danger-hover);
         }
         
         .btn-warning {
-            background-color: #ffc107;
-            color: #212529;
+            background-color: var(--btn-warning-bg);
+            color: var(--btn-warning-text);
             border: none;
             padding: 10px 20px;
             border-radius: 5px;
             cursor: pointer;
             font-size: 14px;
+            transition: background-color 0.3s ease;
         }
         
         .btn-warning:hover {
-            background-color: #e0a800;
+            background-color: var(--btn-warning-hover);
         }
         
         .slider-container {
@@ -189,7 +273,8 @@ const char index_ov2640_html[] = R"rawliteral(
         
         .slider-value {
             text-align: center;
-            color: #555;
+            color: var(--text-color);
+            transition: color 0.3s ease;
         }
         
         .info-display {
@@ -200,21 +285,24 @@ const char index_ov2640_html[] = R"rawliteral(
         
         .info-item {
             padding: 15px;
-            background-color: white;
+            background-color: var(--container-bg);
             border-radius: 5px;
-            border: 1px solid #ddd;
+            border: 1px solid var(--border-color);
+            transition: background-color 0.3s ease, border-color 0.3s ease;
         }
         
         .info-label {
             font-size: 14px;
-            color: #666;
+            color: var(--info-label-color);
             margin-bottom: 5px;
+            transition: color 0.3s ease;
         }
         
         .info-value {
             font-size: 16px;
             font-weight: bold;
-            color: #333;
+            color: var(--info-value-color);
+            transition: color 0.3s ease;
         }
         
         .status-indicator {
@@ -242,28 +330,32 @@ const char index_ov2640_html[] = R"rawliteral(
         
         .sd-info-item {
             padding: 15px;
-            background-color: white;
+            background-color: var(--container-bg);
             border-radius: 5px;
-            border: 1px solid #ddd;
+            border: 1px solid var(--border-color);
             text-align: center;
+            transition: background-color 0.3s ease, border-color 0.3s ease;
         }
         
         .sd-info-label {
             font-size: 14px;
-            color: #666;
+            color: var(--info-label-color);
             margin-bottom: 5px;
+            transition: color 0.3s ease;
         }
         
         .sd-info-value {
             font-size: 20px;
             font-weight: bold;
-            color: #333;
+            color: var(--sd-info-value-color);
+            transition: color 0.3s ease;
         }
         
         .sd-info-unit {
             font-size: 14px;
-            color: #999;
+            color: var(--sd-info-unit-color);
             margin-left: 5px;
+            transition: color 0.3s ease;
         }
         
         .camera-settings {
@@ -280,26 +372,29 @@ const char index_ov2640_html[] = R"rawliteral(
         
         .setting-label {
             font-size: 14px;
-            color: #666;
+            color: var(--setting-label-color);
             margin-bottom: 5px;
+            transition: color 0.3s ease;
         }
         
         .setting-select {
             padding: 8px;
-            border: 1px solid #ddd;
+            border: 1px solid var(--setting-border-color);
             border-radius: 5px;
             font-size: 14px;
-            background-color: white;
+            background-color: var(--container-bg);
+            color: var(--text-color);
             cursor: pointer;
+            transition: border-color 0.3s ease, background-color 0.3s ease, color 0.3s ease;
         }
         
         .setting-select:hover {
-            border-color: #007bff;
+            border-color: var(--setting-border-hover);
         }
         
         .setting-select:focus {
             outline: none;
-            border-color: #007bff;
+            border-color: var(--setting-border-hover);
             box-shadow: 0 0 0 2px rgba(0, 123, 255, 0.25);
         }
         
@@ -308,21 +403,24 @@ const char index_ov2640_html[] = R"rawliteral(
             justify-content: center;
             align-items: center;
             padding: 20px;
-            background-color: white;
+            background-color: var(--container-bg);
             border-radius: 5px;
-            border: 1px solid #ddd;
+            border: 1px solid var(--border-color);
+            transition: background-color 0.3s ease, border-color 0.3s ease;
         }
         
         .uptime-value {
             font-size: 24px;
             font-weight: bold;
-            color: #333;
+            color: var(--uptime-value-color);
+            transition: color 0.3s ease;
         }
         
         .uptime-unit {
             font-size: 14px;
-            color: #666;
+            color: var(--uptime-unit-color);
             margin-left: 10px;
+            transition: color 0.3s ease;
         }
         
         .language-selector {
@@ -331,33 +429,88 @@ const char index_ov2640_html[] = R"rawliteral(
             align-items: center;
             margin-bottom: 20px;
             padding: 10px;
-            background-color: #f9f9f9;
+            background-color: var(--section-bg);
             border-radius: 5px;
+            transition: background-color 0.3s ease;
         }
         
         .language-label {
             font-size: 14px;
-            color: #666;
+            color: var(--language-label-color);
             margin-right: 10px;
+            transition: color 0.3s ease;
         }
         
         .language-select {
             padding: 8px 12px;
-            border: 1px solid #ddd;
+            border: 1px solid var(--setting-border-color);
             border-radius: 5px;
             font-size: 14px;
-            background-color: white;
+            background-color: var(--container-bg);
+            color: var(--text-color);
             cursor: pointer;
+            transition: border-color 0.3s ease, background-color 0.3s ease, color 0.3s ease;
         }
         
         .language-select:hover {
-            border-color: #007bff;
+            border-color: var(--setting-border-hover);
         }
         
         .language-select:focus {
             outline: none;
-            border-color: #007bff;
+            border-color: var(--setting-border-hover);
             box-shadow: 0 0 0 2px rgba(0, 123, 255, 0.25);
+        }
+        
+        .theme-selector {
+            display: flex;
+            justify-content: flex-end;
+            align-items: center;
+            margin-bottom: 20px;
+            padding: 10px;
+            background-color: var(--section-bg);
+            border-radius: 5px;
+            transition: background-color 0.3s ease;
+        }
+        
+        .theme-label {
+            font-size: 14px;
+            color: var(--language-label-color);
+            margin-right: 10px;
+            transition: color 0.3s ease;
+        }
+        
+        .theme-select {
+            padding: 8px 12px;
+            border: 1px solid var(--setting-border-color);
+            border-radius: 5px;
+            font-size: 14px;
+            background-color: var(--container-bg);
+            color: var(--text-color);
+            cursor: pointer;
+            transition: border-color 0.3s ease, background-color 0.3s ease, color 0.3s ease;
+        }
+        
+        .theme-select:hover {
+            border-color: var(--setting-border-hover);
+        }
+        
+        .theme-select:focus {
+            outline: none;
+            border-color: var(--setting-border-hover);
+            box-shadow: 0 0 0 2px rgba(0, 123, 255, 0.25);
+        }
+        
+        .selectors-container {
+            display: flex;
+            gap: 10px;
+            justify-content: flex-end;
+            margin-bottom: 20px;
+        }
+        
+        .selector-item {
+            flex: 1;
+            max-width: 200px;
         }
     </style>
 </head>
@@ -365,13 +518,26 @@ const char index_ov2640_html[] = R"rawliteral(
     <div class="container">
         <h1 data-lang="title">ESP32-S3监控控制台</h1>
         
-        <!-- 语言选择器 -->
-        <div class="language-selector">
-            <span class="language-label" data-lang="language">Language / 语言</span>
-            <select id="language-select" class="language-select" onchange="changeLanguage()">
-                <option value="en">English</option>
-                <option value="zh">中文</option>
-            </select>
+        <!-- 语言和主题选择器 -->
+        <div class="selectors-container">
+            <div class="selector-item">
+                <div class="language-selector">
+                    <span class="language-label" data-lang="language">Language / 语言</span>
+                    <select id="language-select" class="language-select" onchange="changeLanguage()">
+                        <option value="en">English</option>
+                        <option value="zh">中文</option>
+                    </select>
+                </div>
+            </div>
+            <div class="selector-item">
+                <div class="theme-selector">
+                    <span class="theme-label" data-lang="theme">Theme / 主题</span>
+                    <select id="theme-select" class="theme-select" onchange="changeTheme()">
+                        <option value="light" data-lang="lightTheme">Light / 浅色</option>
+                        <option value="dark" data-lang="darkTheme">Dark / 深色</option>
+                    </select>
+                </div>
+            </div>
         </div>
         
         <!-- 视频显示区域 -->
@@ -490,6 +656,9 @@ const char index_ov2640_html[] = R"rawliteral(
             en: {
                 title: "ESP32-S3 Monitoring Console",
                 language: "Language",
+                theme: "Theme",
+                lightTheme: "Light",
+                darkTheme: "Dark",
                 liveVideo: "Live Video",
                 loadingStream: "Loading video stream...",
                 capturePhoto: "Capture Photo",
@@ -514,6 +683,9 @@ const char index_ov2640_html[] = R"rawliteral(
             zh: {
                 title: "ESP32-S3监控控制台",
                 language: "语言",
+                theme: "主题",
+                lightTheme: "浅色",
+                darkTheme: "深色",
                 liveVideo: "实时视频",
                 loadingStream: "正在加载视频流...",
                 capturePhoto: "拍照",
@@ -540,6 +712,9 @@ const char index_ov2640_html[] = R"rawliteral(
         // 当前语言 / Current language
         let currentLanguage = 'en';
         
+        // 当前主题 / Current theme
+        let currentTheme = 'light';
+        
         // 切换语言 / Change language
         function changeLanguage() {
             const langSelect = document.getElementById('language-select');
@@ -556,6 +731,22 @@ const char index_ov2640_html[] = R"rawliteral(
             
             // 保存语言偏好到localStorage / Save language preference to localStorage
             localStorage.setItem('preferredLanguage', currentLanguage);
+        }
+        
+        // 切换主题 / Change theme
+        function changeTheme() {
+            const themeSelect = document.getElementById('theme-select');
+            currentTheme = themeSelect.value;
+            
+            // 设置data-theme属性 / Set data-theme attribute
+            if (currentTheme === 'dark') {
+                document.documentElement.setAttribute('data-theme', 'dark');
+            } else {
+                document.documentElement.removeAttribute('data-theme');
+            }
+            
+            // 保存主题偏好到localStorage / Save theme preference to localStorage
+            localStorage.setItem('preferredTheme', currentTheme);
         }
         
         // 初始化语言 / Initialize language
@@ -578,8 +769,31 @@ const char index_ov2640_html[] = R"rawliteral(
             changeLanguage();
         }
         
-        // 页面加载时初始化语言 / Initialize language on page load
-        window.addEventListener('load', initializeLanguage);
+        // 初始化主题 / Initialize theme
+        function initializeTheme() {
+            // 从localStorage读取主题偏好，如果没有则使用默认主题浅色 / Read theme preference from localStorage, use default light if not set
+            const savedTheme = localStorage.getItem('preferredTheme');
+            if (savedTheme && (savedTheme === 'light' || savedTheme === 'dark')) {
+                currentTheme = savedTheme;
+            } else {
+                currentTheme = 'light';
+            }
+            
+            // 设置主题选择器的值 / Set theme selector value
+            const themeSelect = document.getElementById('theme-select');
+            if (themeSelect) {
+                themeSelect.value = currentTheme;
+            }
+            
+            // 应用主题 / Apply theme
+            changeTheme();
+        }
+        
+        // 页面加载时初始化语言和主题 / Initialize language and theme on page load
+        window.addEventListener('load', function() {
+            initializeLanguage();
+            initializeTheme();
+        });
         
         // 应用摄像头设置 / Apply camera settings
         function applyCameraSettings() {

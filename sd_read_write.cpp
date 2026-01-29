@@ -15,8 +15,9 @@
                9. 自动清理旧文件功能（55GB阈值）/ Auto cleanup old files function (55GB threshold)
                10. 时间戳文件名生成功能（YYYYMMDDHHMM格式，年月日时分）/ Timestamp filename generation function (YYYYMMDDHHMM format)
                11. 视频自动分段录制功能（2分钟一段）/ Auto-segmented video recording function (2 minutes per segment)
+               12. 无效视频文件清理功能（删除0KB视频文件）/ Invalid video file cleanup function (delete 0KB video files)
   作者 / Author : ESP32-S3监控项目 / ESP32-S3 Monitoring Project
-  修改日期 / Modification Date : 2026-01-28
+  修改日期 / Modification Date : 2026-01-29
   硬件平台 / Hardware Platform : ESP32S3-EYE开发板 / ESP32S3-EYE Development Board
   依赖库 / Dependencies : FS.h - 文件系统基础库 / File System Base Library
                SD_MMC.h - SD_MMC驱动库 / SD_MMC Driver Library
@@ -38,6 +39,7 @@
                7. 实现视频自动分段录制功能（2分钟一段）/ Implemented auto-segmented video recording function (2 minutes per segment)
                8. 修改照片和视频文件名为时间戳格式（YYYYMMDDHHMM）/ Changed photo and video filename format to timestamp (YYYYMMDDHHMM)
                9. 使用NTP时间同步获取准确时间 / Uses NTP time synchronization to get accurate time
+               10. 添加无效视频文件清理功能（cleanInvalidVideoFiles）/ Added invalid video file cleanup function (cleanInvalidVideoFiles)
   注意事项 / Important Notes : 时间戳格式使用NTP同步的系统时间，确保时间准确性 / Timestamp format uses NTP-synchronized system time to ensure time accuracy
 **********************************************************************/
 
@@ -770,6 +772,67 @@ int deleteAllFiles(const char * dirname){
         }
         // 打开下一个文件
         file = root.openNextFile();
+    }
+    
+    // 返回删除的文件数量
+    return num;
+}
+
+/**
+ * @brief 清理无效视频文件函数
+ * @details 功能说明：
+ *          1. 遍历videos目录中的所有文件
+ *          2. 检查每个文件的大小是否为0KB
+ *          3. 删除所有大小为0KB的视频文件
+ *          4. 返回删除的文件数量
+ * @note 用于清理启动时可能产生的无效视频文件
+ */
+int cleanInvalidVideoFiles(void){
+    // 打开videos目录
+    File root = SD_MMC.open(VIDEO_DIR);
+    if(!root){
+        Serial.println("Failed to open videos directory");
+        return -1;
+    }
+    
+    // 检查是否为目录
+    if(!root.isDirectory()){
+        Serial.println("Not a directory");
+        return -1;
+    }
+
+    // 打开第一个文件
+    File file = root.openNextFile();
+    
+    // 遍历目录中的所有文件
+    int num = 0;
+    while(file){
+        // 只处理文件，不处理子目录
+        if(!file.isDirectory()){
+            // 检查文件大小是否为0KB
+            if(file.size() == 0){
+                // 构建完整文件路径
+                char path[128];
+                snprintf(path, sizeof(path), "%s/%s", VIDEO_DIR, file.name());
+                
+                // 删除无效视频文件
+                if(SD_MMC.remove(path)){
+                    num++;
+                    Serial.printf("Deleted invalid video file (0KB): %s\n", path);
+                } else {
+                    Serial.printf("Failed to delete invalid video file: %s\n", path);
+                }
+            }
+        }
+        // 打开下一个文件
+        file = root.openNextFile();
+    }
+    
+    // 输出清理结果
+    if(num > 0){
+        Serial.printf("Cleaned up %d invalid video file(s)\n", num);
+    } else {
+        Serial.println("No invalid video files found");
     }
     
     // 返回删除的文件数量

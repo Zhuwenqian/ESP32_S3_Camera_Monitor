@@ -125,7 +125,7 @@ static ra_filter_t *ra_filter_init(ra_filter_t *filter, size_t sample_size)
 
 #ifdef CONFIG_LED_ILLUMINATOR_ENABLED
 void enable_led(bool en)
-{ // Turn LED On or Off / 打开或关闭LED / 打开或关闭LED / 打开或关闭LED / 打开或关闭LED
+{ // Turn LED On or Off
     int duty = en ? led_duty : 0;
     if (en && isStreaming && (led_duty > CONFIG_LED_MAX_INTENSITY))
     {

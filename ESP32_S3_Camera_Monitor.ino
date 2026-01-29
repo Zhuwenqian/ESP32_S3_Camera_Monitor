@@ -58,8 +58,8 @@
 // =================== / ===========================
 // Enter your WiFi credentials / 输入WiFi凭证 / 输入WiFi凭证
 // =================== / ===========================
-const char* ssid     = "your_ssid";
-const char* password = "your_password";
+const char* ssid     = "zhuline";
+const char* password = "zhu8437547";
 
 // 运行时长统计 / Uptime counter / Uptime counter
 unsigned long startTime = 0;
@@ -109,7 +109,7 @@ void setup() {
   config.pin_pwdn = PWDN_GPIO_NUM;
   config.pin_reset = RESET_GPIO_NUM;
   config.xclk_freq_hz = 20000000;
-  config.frame_size = FRAMESIZE_SVGA;
+  config.frame_size = FRAMESIZE_XGA;
   config.pixel_format = PIXFORMAT_JPEG; // for streaming / 用于流媒体 / 用于流媒体
   config.grab_mode = CAMERA_GRAB_WHEN_EMPTY;
   config.fb_location = CAMERA_FB_IN_PSRAM;
@@ -179,14 +179,25 @@ void setup() {
   // 初始化照片保存目录 / Initialize photo save directory / Initialize photo save directory
   initPhotoDir();
 
+  // 清理无效视频文件（大小为0KB的视频）/ Clean up invalid video files (0KB video files) / Clean up invalid video files (0KB video files)
+  Serial.println("Cleaning up invalid video files... / 清理无效视频文件...");
+  int cleanedFiles = cleanInvalidVideoFiles();
+  if(cleanedFiles > 0){
+    Serial.printf("Cleaned up %d invalid video file(s) / 清理了 %d 个无效视频文件\n", cleanedFiles);
+  } else if(cleanedFiles == 0){
+    Serial.println("No invalid video files found / 未发现无效视频文件");
+  } else {
+    Serial.println("Failed to clean up invalid video files / 清理无效视频文件失败");
+  }
+
   // 启动视频录制（启动时自动开始录制）/ Start video recording (auto-start on boot)/ Start video recording (auto-start on boot)
   Serial.println("Starting video recording... / 启动视频录制...");
-  if(startVideoRecording(15, 1280, 720)){
+  if(startVideoRecording(20, 1024, 768)){
     Serial.println("Video recording started successfully / 视频录制启动成功");
     
     // 创建视频录制任务 / Create video recording task / Create video recording task
     int *fpsParam = (int*)malloc(sizeof(int));
-    *fpsParam = 15;
+    *fpsParam = 20;
     xTaskCreate(videoRecordTask, "video_record", 4096, fpsParam, 5, NULL);
   } else {
     Serial.println("Failed to start video recording / 视频录制启动失败");
@@ -251,4 +262,3 @@ void loop() {
     last_cleanup = current_time;
   }
 }
-
