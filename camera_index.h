@@ -11,6 +11,7 @@
  * 3. SD卡信息区域：显示SD卡存储信息（GB单位）/ SD card info area: displays SD card storage information (GB unit)
  * 4. 运行时长区域：显示系统运行时长（HH:MM:SS格式）/ Uptime area: displays system uptime (HH:MM:SS format)
  * 5. 摄像头设置区域：调节分辨率、图像质量、亮度、对比度、饱和度 / Camera settings area: adjusts resolution, quality, brightness, contrast, saturation
+ * 6. 语言选择功能：支持英语和中文切换，默认为英语 / Language selection: supports English and Chinese switching, default is English
  * 
  * 技术实现 / Technical Implementation:
  * - 使用HTML5和CSS3构建界面 / Uses HTML5 and CSS3 to build the interface
@@ -18,6 +19,8 @@
  * - 使用Fetch API与服务器通信 / Uses Fetch API to communicate with server
  * - 支持响应式设计 / Supports responsive design
  * - 支持实时状态更新 / Supports real-time status updates
+ * - 使用localStorage保存语言偏好 / Uses localStorage to save language preference
+ * - 使用data-lang属性实现多语言切换 / Uses data-lang attributes for multi-language switching
  * 
  * 界面特点 / Interface Features:
  * - 简洁美观的UI设计 / Clean and beautiful UI design
@@ -26,9 +29,11 @@
  * - SD卡空间实时更新（GB单位）/ Real-time SD card space update (GB unit)
  * - 摄像头参数动态调节 / Dynamic camera parameter adjustment
  * - 视频流加载状态显示 / Video stream loading status display
+ * - 双语支持（英语和中文）/ Bilingual support (English and Chinese)
+ * - 语言偏好记忆功能 / Language preference memory
  * 
  * 创建日期 / Creation Date : 2026-01-26
- * 最后更新 / Last Update : 2026-01-28
+ * 最后更新 / Last Update : 2026-01-29
  * 最新更新 / Latest Updates:
  * 1. 添加摄像头设置界面（分辨率、图像质量、亮度、对比度、饱和度）/ Added camera settings interface (resolution, quality, brightness, contrast, saturation)
  * 2. 修改SD卡信息显示单位为GB / Changed SD card info display unit to GB
@@ -44,6 +49,9 @@
  * 12. 修改照片和视频文件名为时间戳格式（YYYYMMDDHHMM）/ Changed photo and video filename format to timestamp (YYYYMMDDHHMM)
  * 13. 实现视频自动分段录制功能（2分钟一段）/ Implemented auto-segmented video recording (2 minutes per segment)
  * 14. 系统启动时自动开始录制 / Recording starts automatically on boot
+ * 15. 添加语言选择功能（英语和中文，默认英语）/ Added language selection (English and Chinese, default is English)
+ * 16. 使用localStorage保存用户语言偏好 / Uses localStorage to save user language preference
+ * 17. 实现页面加载时自动应用保存的语言 / Implements automatic application of saved language on page load
  */
 
 // Web界面HTML代码 / Web interface HTML code
@@ -316,45 +324,89 @@ const char index_ov2640_html[] = R"rawliteral(
             color: #666;
             margin-left: 10px;
         }
+        
+        .language-selector {
+            display: flex;
+            justify-content: flex-end;
+            align-items: center;
+            margin-bottom: 20px;
+            padding: 10px;
+            background-color: #f9f9f9;
+            border-radius: 5px;
+        }
+        
+        .language-label {
+            font-size: 14px;
+            color: #666;
+            margin-right: 10px;
+        }
+        
+        .language-select {
+            padding: 8px 12px;
+            border: 1px solid #ddd;
+            border-radius: 5px;
+            font-size: 14px;
+            background-color: white;
+            cursor: pointer;
+        }
+        
+        .language-select:hover {
+            border-color: #007bff;
+        }
+        
+        .language-select:focus {
+            outline: none;
+            border-color: #007bff;
+            box-shadow: 0 0 0 2px rgba(0, 123, 255, 0.25);
+        }
     </style>
 </head>
 <body>
     <div class="container">
-        <h1>ESP32-S3监控控制台</h1>
+        <h1 data-lang="title">ESP32-S3监控控制台</h1>
+        
+        <!-- 语言选择器 -->
+        <div class="language-selector">
+            <span class="language-label" data-lang="language">Language / 语言</span>
+            <select id="language-select" class="language-select" onchange="changeLanguage()">
+                <option value="en">English</option>
+                <option value="zh">中文</option>
+            </select>
+        </div>
         
         <!-- 视频显示区域 -->
         <div class="control-section">
-            <div class="section-title">实时视频</div>
+            <div class="section-title" data-lang="liveVideo">实时视频</div>
             <div class="video-container">
                 <img id="stream" src="" alt="视频流" style="display:none;" onload="this.style.display='block'; document.getElementById('loading').style.display='none';">
-                <div id="loading" style="text-align:center; padding:20px; color:#666;">正在加载视频流...</div>
+                <div id="loading" style="text-align:center; padding:20px; color:#666;" data-lang="loadingStream">正在加载视频流...</div>
             </div>
             <div style="margin-top: 15px; text-align: center;">
-                <button class="btn-primary" onclick="capturePhoto()">拍照</button>
-                <button class="btn-success" onclick="openStreamInNewTab()">在新标签页中打开视频流</button>
+                <button class="btn-primary" onclick="capturePhoto()" data-lang="capturePhoto">拍照</button>
+                <button class="btn-success" onclick="openStreamInNewTab()" data-lang="openStreamNewTab">在新标签页中打开视频流</button>
             </div>
         </div>
         
         <!-- SD卡信息区域 -->
         <div class="control-section">
-            <div class="section-title">SD卡存储信息</div>
+            <div class="section-title" data-lang="sdCardInfo">SD卡存储信息</div>
             <div class="sd-info">
                 <div class="sd-info-item">
-                    <div class="sd-info-label">总空间</div>
+                    <div class="sd-info-label" data-lang="totalSpace">总空间</div>
                     <div class="sd-info-value">
                         <span id="sd-total">--</span>
                         <span class="sd-info-unit">GB</span>
                     </div>
                 </div>
                 <div class="sd-info-item">
-                    <div class="sd-info-label">已用空间</div>
+                    <div class="sd-info-label" data-lang="usedSpace">已用空间</div>
                     <div class="sd-info-value">
                         <span id="sd-used">--</span>
                         <span class="sd-info-unit">GB</span>
                     </div>
                 </div>
                 <div class="sd-info-item">
-                    <div class="sd-info-label">剩余空间</div>
+                    <div class="sd-info-label" data-lang="freeSpace">剩余空间</div>
                     <div class="sd-info-value">
                         <span id="sd-free">--</span>
                         <span class="sd-info-unit">GB</span>
@@ -365,21 +417,21 @@ const char index_ov2640_html[] = R"rawliteral(
         
         <!-- 运行时长区域 -->
         <div class="control-section">
-            <div class="section-title">系统运行时长</div>
+            <div class="section-title" data-lang="systemUptime">系统运行时长</div>
             <div class="uptime-info">
                 <div class="uptime-value">
                     <span id="uptime">--:--:--</span>
-                    <span class="uptime-unit">运行时间</span>
+                    <span class="uptime-unit" data-lang="uptimeUnit">运行时间</span>
                 </div>
             </div>
         </div>
         
         <!-- 摄像头设置区域 -->
         <div class="control-section">
-            <div class="section-title">摄像头设置</div>
+            <div class="section-title" data-lang="cameraSettings">摄像头设置</div>
             <div class="camera-settings">
                 <div class="setting-item">
-                    <label class="setting-label">分辨率</label>
+                    <label class="setting-label" data-lang="resolution">分辨率</label>
                     <select id="framesize" class="setting-select" onchange="applyCameraSettings()">
                         <option value="10">QVGA (320x240)</option>
                         <option value="7">SVGA (800x600)</option>
@@ -390,16 +442,16 @@ const char index_ov2640_html[] = R"rawliteral(
                     </select>
                 </div>
                 <div class="setting-item">
-                    <label class="setting-label">图像质量</label>
+                    <label class="setting-label" data-lang="imageQuality">图像质量</label>
                     <select id="quality" class="setting-select" onchange="applyCameraSettings()">
-                        <option value="63">低质量 (63)</option>
-                        <option value="31">中等质量 (31)</option>
-                        <option value="10" selected>高质量 (10)</option>
-                        <option value="5">极高质量 (5)</option>
+                        <option value="63" data-lang="lowQuality">低质量 (63)</option>
+                        <option value="31" data-lang="mediumQuality">中等质量 (31)</option>
+                        <option value="10" selected data-lang="highQuality">高质量 (10)</option>
+                        <option value="5" data-lang="veryHighQuality">极高质量 (5)</option>
                     </select>
                 </div>
                 <div class="setting-item">
-                    <label class="setting-label">亮度</label>
+                    <label class="setting-label" data-lang="brightness">亮度</label>
                     <select id="brightness" class="setting-select" onchange="applyCameraSettings()">
                         <option value="-2">-2</option>
                         <option value="-1">-1</option>
@@ -409,7 +461,7 @@ const char index_ov2640_html[] = R"rawliteral(
                     </select>
                 </div>
                 <div class="setting-item">
-                    <label class="setting-label">对比度</label>
+                    <label class="setting-label" data-lang="contrast">对比度</label>
                     <select id="contrast" class="setting-select" onchange="applyCameraSettings()">
                         <option value="-2">-2</option>
                         <option value="-1">-1</option>
@@ -419,7 +471,7 @@ const char index_ov2640_html[] = R"rawliteral(
                     </select>
                 </div>
                 <div class="setting-item">
-                    <label class="setting-label">饱和度</label>
+                    <label class="setting-label" data-lang="saturation">饱和度</label>
                     <select id="saturation" class="setting-select" onchange="applyCameraSettings()">
                         <option value="-2">-2</option>
                         <option value="-1">-1</option>
@@ -433,6 +485,102 @@ const char index_ov2640_html[] = R"rawliteral(
     </div>
     
     <script>
+        // 语言翻译对象 / Language translation object
+        const translations = {
+            en: {
+                title: "ESP32-S3 Monitoring Console",
+                language: "Language",
+                liveVideo: "Live Video",
+                loadingStream: "Loading video stream...",
+                capturePhoto: "Capture Photo",
+                openStreamNewTab: "Open Stream in New Tab",
+                sdCardInfo: "SD Card Storage Info",
+                totalSpace: "Total Space",
+                usedSpace: "Used Space",
+                freeSpace: "Free Space",
+                systemUptime: "System Uptime",
+                uptimeUnit: "Uptime",
+                cameraSettings: "Camera Settings",
+                resolution: "Resolution",
+                imageQuality: "Image Quality",
+                lowQuality: "Low Quality (63)",
+                mediumQuality: "Medium Quality (31)",
+                highQuality: "High Quality (10)",
+                veryHighQuality: "Very High Quality (5)",
+                brightness: "Brightness",
+                contrast: "Contrast",
+                saturation: "Saturation"
+            },
+            zh: {
+                title: "ESP32-S3监控控制台",
+                language: "语言",
+                liveVideo: "实时视频",
+                loadingStream: "正在加载视频流...",
+                capturePhoto: "拍照",
+                openStreamNewTab: "在新标签页中打开视频流",
+                sdCardInfo: "SD卡存储信息",
+                totalSpace: "总空间",
+                usedSpace: "已用空间",
+                freeSpace: "剩余空间",
+                systemUptime: "系统运行时长",
+                uptimeUnit: "运行时间",
+                cameraSettings: "摄像头设置",
+                resolution: "分辨率",
+                imageQuality: "图像质量",
+                lowQuality: "低质量 (63)",
+                mediumQuality: "中等质量 (31)",
+                highQuality: "高质量 (10)",
+                veryHighQuality: "极高质量 (5)",
+                brightness: "亮度",
+                contrast: "对比度",
+                saturation: "饱和度"
+            }
+        };
+        
+        // 当前语言 / Current language
+        let currentLanguage = 'en';
+        
+        // 切换语言 / Change language
+        function changeLanguage() {
+            const langSelect = document.getElementById('language-select');
+            currentLanguage = langSelect.value;
+            
+            // 更新所有带有data-lang属性的元素 / Update all elements with data-lang attribute
+            const elements = document.querySelectorAll('[data-lang]');
+            elements.forEach(element => {
+                const key = element.getAttribute('data-lang');
+                if (translations[currentLanguage][key]) {
+                    element.textContent = translations[currentLanguage][key];
+                }
+            });
+            
+            // 保存语言偏好到localStorage / Save language preference to localStorage
+            localStorage.setItem('preferredLanguage', currentLanguage);
+        }
+        
+        // 初始化语言 / Initialize language
+        function initializeLanguage() {
+            // 从localStorage读取语言偏好，如果没有则使用默认语言英语 / Read language preference from localStorage, use default English if not set
+            const savedLanguage = localStorage.getItem('preferredLanguage');
+            if (savedLanguage && translations[savedLanguage]) {
+                currentLanguage = savedLanguage;
+            } else {
+                currentLanguage = 'en';
+            }
+            
+            // 设置语言选择器的值 / Set language selector value
+            const langSelect = document.getElementById('language-select');
+            if (langSelect) {
+                langSelect.value = currentLanguage;
+            }
+            
+            // 应用语言 / Apply language
+            changeLanguage();
+        }
+        
+        // 页面加载时初始化语言 / Initialize language on page load
+        window.addEventListener('load', initializeLanguage);
+        
         // 应用摄像头设置 / Apply camera settings
         function applyCameraSettings() {
             const framesize = document.getElementById('framesize').value;
