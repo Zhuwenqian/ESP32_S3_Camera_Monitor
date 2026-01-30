@@ -550,7 +550,6 @@ const char index_ov2640_html[] = R"rawliteral(
             <div style="margin-top: 15px; text-align: center;">
                 <button id="toggle-stream" class="btn-primary" onclick="toggleStream()" data-lang="startStream">开始视频流</button>
                 <button class="btn-primary" onclick="capturePhoto()" data-lang="capturePhoto">拍照</button>
-                <button class="btn-success" onclick="openStreamInNewTab()" data-lang="openStreamNewTab">在新标签页中打开视频流</button>
             </div>
         </div>
         
@@ -663,7 +662,6 @@ const char index_ov2640_html[] = R"rawliteral(
                 liveVideo: "Live Video",
                 loadingStream: "Loading video stream...",
                 capturePhoto: "Capture Photo",
-                openStreamNewTab: "Open Stream in New Tab",
                 sdCardInfo: "SD Card Storage Info",
                 totalSpace: "Total Space",
                 usedSpace: "Used Space",
@@ -692,7 +690,6 @@ const char index_ov2640_html[] = R"rawliteral(
                 liveVideo: "实时视频",
                 loadingStream: "正在加载视频流...",
                 capturePhoto: "拍照",
-                openStreamNewTab: "在新标签页中打开视频流",
                 sdCardInfo: "SD卡存储信息",
                 totalSpace: "总空间",
                 usedSpace: "已用空间",
@@ -900,13 +897,6 @@ const char index_ov2640_html[] = R"rawliteral(
                 console.error('拍照失败:', error);
                 alert('拍照失败！');
             });
-        }
-        
-        // 在新标签页中打开视频流 / Open video stream in new tab
-        function openStreamInNewTab() {
-            const streamUrl = 'http://' + window.location.hostname + ':81/stream';
-            console.log('在新标签页中打开视频流:', streamUrl);
-            window.open(streamUrl, '_blank');
         }
         
         // 切换视频流开关 / Toggle video stream
