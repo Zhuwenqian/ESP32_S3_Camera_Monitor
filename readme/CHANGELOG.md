@@ -28,6 +28,17 @@ This project is modified from the following open-source projects:
 
 ## Update Log
 
+### 2026-01-30 - Fixed Video Stream Auto-Acquisition Issue
+**Updates:**
+- Removed automatic video stream acquisition on page load
+- Added manual control button for video stream (Start/Stop)
+- Updated Web interface with bilingual support for the new button
+
+**Modified Files:**
+1. camera_index.h - Updated HTML structure and JavaScript logic
+
+---
+
 ### 2026-01-29 - Added Invalid Video File Cleanup Function
 **Updates:**
 - Added automatic cleanup function for invalid video files (0KB files)

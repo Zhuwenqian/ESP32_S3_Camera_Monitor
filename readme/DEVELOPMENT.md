@@ -27,7 +27,7 @@ This project is modified from the following open-source projects:
 This project is based on the ESP32-S3-CAM (Guoyun version) development board, implementing a basic network video monitoring system. The system supports real-time video streaming and photo capture, suitable for home monitoring, security monitoring, and other scenarios.
 
 ### 1.2 Project Goals
-- Implement real-time video streaming display on the Web
+- Implement real-time video streaming display on the Web (Manual Control)
 - Implement photo capture control on the Web
 - Implement opening video streaming in a new tab
 - Implement basic HTTP server
