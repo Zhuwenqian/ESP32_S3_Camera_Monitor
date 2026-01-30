@@ -119,7 +119,7 @@ This project is modified from following open-source projects:
 
 ### Step 4: Using the System
 
-- **View Live Video**: Click the "Open the video stream in a new tab" button to load the video stream (Note: Video stream does not auto-load, this is a known issue)
+- **View Live Video**: Click the "Start Stream" button to load the video stream on main page
 - **Capture Photo**: Click the "Capture Photo" button to save a photo to the SD card
 - **Adjust Settings**: Modify camera parameters (resolution, quality, brightness, etc.) in the settings panel
 - **View SD Card Info**: Monitor SD card usage and system uptime on the dashboard
@@ -129,7 +129,7 @@ This project is modified from following open-source projects:
 - **Camera not working**: 1.Check camera connection and ensure the correct camera model is selected;2.Do not close the tab, restart the board, when the board is restarted, open the video stream again.(The second one is a known issue)
 - **WiFi not connecting**: Verify WiFi credentials and ensure the board is within range
 - **SD card not detected**: Format the SD card as FAT32 and ensure it's properly inserted
-- **Video stream not loading**: Click the "Start Stream" button manually (Note: Auto-load is a known issue, manual start is required)
+- **Video stream not loading**: Click the "Start Stream" button manually or restart the board.
 
 ## Documentation
 
@@ -307,7 +307,9 @@ The authors and Zhipu AI Technology Co., Ltd. (Beijing Zhipu Huazhang Technology
 - **摄像头不工作**：1.检查摄像头连接并确保选择了正确的摄像头型号;2.不要关闭页面，重启开发板，重启完了再打开视频流,这是一个已知问题
 - **WiFi无法连接**：验证WiFi凭证并确保开发板在信号范围内
 - **SD卡未检测到**：将SD卡格式化为FAT32并确保正确插入
-- **视频流无法加载**：手动点击"Start Stream"按钮（注意：自动加载是一个已知问题，需要手动启动）
+- **视频流未加载**：点击"Start Stream"按钮手动加载视频流（注意：自动加载是一个已知问题，手动加载是必要的）
+
+
 
 ## 文档
 
