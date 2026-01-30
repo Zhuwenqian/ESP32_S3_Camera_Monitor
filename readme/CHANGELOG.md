@@ -28,6 +28,41 @@ This project is modified from the following open-source projects:
 
 ## Update Log
 
+### 2026-01-30 - Fixed Authentication Flow and Session Management
+**Updates:**
+- Fixed repeated authentication prompts when accessing video stream
+  - Root cause: Browser <img> tags don't automatically send Basic Auth headers or cookies
+  - Solution: Implemented IP-based authorization mechanism
+  - When user successfully authenticates via Basic Auth, their IP is authorized for 5 minutes
+  - Video stream and other <img> tag requests can now access without repeated authentication
+- Added IP authorization management system
+  - New IP authorization structure with 5-minute expiration time
+  - IP authorization is automatically added after successful Basic Auth
+  - All protected interfaces now check: Session → IP Authorization → Basic Auth
+  - Added functions: auth_verify_ip(), auth_add_ip_auth(), auth_cleanup_expired_ip_auth()
+- Updated frontend to verify authentication before starting video stream
+  - Added fetch() call to /status endpoint before loading stream
+  - Ensures IP authorization is established before video stream request
+  - Added user-friendly alert if authentication is required
+- Enhanced security while improving user experience
+  - IP authorization is bound to client IP address
+  - Short expiration time (5 minutes) balances security and convenience
+  - Automatic cleanup of expired IP authorizations
+
+**Modified Files:**
+1. auth.h - Added IP authorization structures and function declarations
+2. auth.cpp - Implemented IP authorization management system
+3. temp_index.html - Updated toggleStream() to verify auth before starting stream
+4. camera_index.h - Recompressed with authentication improvements
+
+**Security Considerations:**
+- IP authorization expires after 5 minutes of inactivity
+- Each successful page refresh or API call extends the authorization
+- IP-based authorization is suitable for home/small office networks
+- For public networks, consider reducing IP_AUTH_EXPIRE_TIME
+
+---
+
 ### 2026-01-30 - Optimized Web Interface Layout and Settings
 **Updates:**
 - Moved pan-tilt control section to the top of the web interface
@@ -1054,7 +1089,6 @@ Dark Theme:
   - 调整建议：根据实际需求调整，每个会话占用约100字节内存
 
 **下一步计划：**
-- 实现舵机控制功能
 - 测试视频录制功能稳定性
 - 优化视频质量和文件大小
 - 添加视频播放功能

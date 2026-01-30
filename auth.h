@@ -53,6 +53,9 @@ extern "C" {
 // 会话过期时间（14天，单位：秒）/ Session expiration time (14 days, unit: seconds)
 #define SESSION_EXPIRE_TIME (14 * 24 * 60 * 60)
 
+// IP授权过期时间（14天，单位：秒）用于视频流等/img标签请求 / IP authorization expiration time (14 days) for video stream and other img tag requests
+#define IP_AUTH_EXPIRE_TIME (60 * 60 * 24 * 14)
+
 // 用户名和密码 / Username and password
 #define AUTH_USERNAME "admin"
 #define AUTH_PASSWORD "password123"
@@ -75,6 +78,14 @@ typedef struct {
     uint32_t last_access_time;   // 最后访问时间（秒）/ Last access time (seconds)
     bool active;                 // 是否激活 / Is active
 } auth_session_t;
+
+// IP授权结构 / IP authorization structure
+typedef struct {
+    char client_ip[16];          // 客户端IP地址 / Client IP address
+    uint32_t auth_time;          // 授权时间（秒）/ Authorization time (seconds)
+    uint32_t last_access_time;   // 最后访问时间（秒）/ Last access time (seconds)
+    bool active;                 // 是否激活 / Is active
+} ip_auth_t;
 
 /**
  * @brief 初始化认证模块 / Initialize authentication module
@@ -132,6 +143,41 @@ uint32_t auth_get_session_count(void);
  * @return uint32_t 清除的会话数量 / Number of sessions cleared
  */
 uint32_t auth_clear_all_sessions(void);
+
+/**
+ * @brief 验证IP授权 / Verify IP authorization
+ * @param req HTTP请求 / HTTP request
+ * @return auth_result_t 认证结果 / Authentication result
+ * @note 检查该IP是否在授权时间内 / Checks if the IP is within authorization time
+ */
+auth_result_t auth_verify_ip(httpd_req_t *req);
+
+/**
+ * @brief 添加IP授权 / Add IP authorization
+ * @param client_ip 客户端IP地址 / Client IP address
+ * @return bool 成功返回true，失败返回false / Returns true on success, false on failure
+ * @note 在Basic认证成功后调用 / Called after successful Basic authentication
+ */
+bool auth_add_ip_auth(const char *client_ip);
+
+/**
+ * @brief 清理过期IP授权 / Clean up expired IP authorizations
+ * @return uint32_t 清理的授权数量 / Number of authorizations cleaned
+ * @note 建议定期调用（如每分钟一次）/ Recommended to call periodically (e.g., once per minute)
+ */
+uint32_t auth_cleanup_expired_ip_auth(void);
+
+/**
+ * @brief 获取IP授权数量 / Get IP authorization count
+ * @return uint32_t 当前活跃的IP授权数量 / Current number of active IP authorizations
+ */
+uint32_t auth_get_ip_auth_count(void);
+
+/**
+ * @brief 清除所有IP授权 / Clear all IP authorizations
+ * @return uint32_t 清除的授权数量 / Number of authorizations cleared
+ */
+uint32_t auth_clear_all_ip_auth(void);
 
 #ifdef __cplusplus
 }

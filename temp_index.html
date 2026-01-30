@@ -727,7 +727,8 @@
                 tiltDown: "Tilt Down",
                 resetServo: "Reset",
                 panAngle: "Pan Angle",
-                tiltAngle: "Tilt Angle"
+                tiltAngle: "Tilt Angle",
+                authRequired: "Please login first"
             },
             zh: {
                 title: "ESP32-S3监控控制台",
@@ -765,7 +766,8 @@
                 tiltDown: "下转",
                 resetServo: "复位",
                 panAngle: "水平角度",
-                tiltAngle: "垂直角度"
+                tiltAngle: "垂直角度",
+                authRequired: "请先登录"
             }
         };
         
@@ -974,22 +976,46 @@
                 const lang = currentLanguage;
                 toggleBtn.textContent = translations[lang]['startStream'];
                 toggleBtn.setAttribute('data-lang', 'startStream');
-                
-                document.getElementById('loading').style.display = 'none';
             } else {
-                // 开始流 / Start stream
-                streamImg.src = streamUrl;
-                streamImg.style.display = 'block';
-                toggleBtn.setAttribute('data-state', 'streaming');
-                toggleBtn.className = 'btn-danger';
-                
-                // 更新按钮文本 / Update button text
-                const lang = currentLanguage;
-                toggleBtn.textContent = translations[lang]['stopStream'];
-                toggleBtn.setAttribute('data-lang', 'stopStream');
-                
-                document.getElementById('loading').style.display = 'block';
+                // 先验证认证状态，确保IP授权已建立 / Verify authentication first to ensure IP authorization is established
+                fetch('/status', {
+                    method: 'GET',
+                    credentials: 'same-origin' // 确保发送Cookie / Ensure cookies are sent
+                })
+                .then(response => {
+                    if (response.status === 401) {
+                        // 需要重新登录 / Need to re-login
+                        const lang = currentLanguage;
+                        alert(translations[lang]['authRequired'] || '请先登录 / Please login first');
+                        return;
+                    }
+                    // 认证成功，开始视频流 / Authentication successful, start video stream
+                    startVideoStream();
+                })
+                .catch(error => {
+                    console.error('Auth check failed:', error);
+                    // 即使检查失败也尝试开始流（可能已有IP授权）/ Try to start stream even if check fails (may already have IP authorization)
+                    startVideoStream();
+                });
             }
+        }
+        
+        // 开始视频流 / Start video stream
+        function startVideoStream() {
+            const streamImg = document.getElementById('stream');
+            const toggleBtn = document.getElementById('toggle-stream');
+            const streamUrl = 'http://' + window.location.hostname + ':81/stream';
+            
+            // 开始流 / Start stream
+            streamImg.src = streamUrl;
+            streamImg.style.display = 'block';
+            toggleBtn.setAttribute('data-state', 'streaming');
+            toggleBtn.className = 'btn-danger';
+            
+            // 更新按钮文本 / Update button text
+            const lang = currentLanguage;
+            toggleBtn.textContent = translations[lang]['stopStream'];
+            toggleBtn.setAttribute('data-lang', 'stopStream');
         }
         
         // 页面加载完成后启动 / Start after page load completes

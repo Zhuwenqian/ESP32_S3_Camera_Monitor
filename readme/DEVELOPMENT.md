@@ -864,10 +864,8 @@ ArduinoJson
 
 ### 15.1 Feature Extensions
 
-- Add SD card storage support
-- Add video recording function
-- Add servo control function
 - Add motion detection function
+- Add OTA Update
 
 ### 15.2 Performance Extensions
 
@@ -875,15 +873,14 @@ ArduinoJson
 - Support higher frame rate
 - Optimize video streaming performance
 
-### 15.3 Interface Extensions
+### 15.3 Actual Use
 
-- Optimize web interface
-- Add mobile device adaptation
-- Add more control functions
+- Open source the 3D model of the monitor (STL&STP&3MF)
+- BOM (Bill of Materials) table
+- Create an assembly tutorial and upload it to Bilibili
 
----
 
------------------------------------------------------------------------------------------
+------------------------------------------------------------------------------------
 
 # ESP32-S3监控项目开发文档
 
@@ -1752,10 +1749,8 @@ ArduinoJson
 
 ### 15.1 功能扩展
 
-- 添加SD卡存储支持
-- 添加视频录制功能
-- 添加舵机控制功能
 - 添加移动侦测功能
+- 添加OTA更新功能
 
 ### 15.2 性能扩展
 
@@ -1763,14 +1758,12 @@ ArduinoJson
 - 支持更高帧率
 - 优化视频流性能
 
-### 15.3 界面扩展
+### 15.3 实际使用
 
-- 优化Web界面
-- 添加移动端适配
-- 添加更多控制功能
-
----
+- 把监控的3D模型开源出来(STL&STP&3MF)
+- BOM表
+- 制作组装教程发布到B站
 
 **文档版本：** 1.2
 **创建日期：** 2026-01-26
-**最后更新：** 2026-01-29
+**最后更新：** 2026-01-30

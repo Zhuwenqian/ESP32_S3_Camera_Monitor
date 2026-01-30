@@ -6,13 +6,14 @@
                主要功能包括 / Main Features:
                1. HTTP Basic Authentication验证 / HTTP Basic Authentication verification
                2. 会话管理（14天过期）/ Session management (14 days expiration)
-               3. Base64编码解码 / Base64 encoding and decoding
-               4. 会话ID生成 / Session ID generation
-               5. 客户端IP地址获取 / Client IP address retrieval
-               6. 会话查找和创建 / Session finding and creation
-               7. 过期会话清理 / Expired session cleanup
+               3. IP授权管理（5分钟过期）用于视频流/img标签 / IP authorization management (5 minutes expiration) for video stream/img tags
+               4. Base64编码解码 / Base64 encoding and decoding
+               5. 会话ID生成 / Session ID generation
+               6. 客户端IP地址获取 / Client IP address retrieval
+               7. 会话查找和创建 / Session finding and creation
+               8. 过期会话清理 / Expired session cleanup
   作者 / Author : ESP32-S3监控项目 / ESP32-S3 Monitoring Project
-  修改日期 / Modification Date : 2026-01-28
+  修改日期 / Modification Date : 2026-01-30
   硬件平台 / Hardware Platform : ESP32S3-EYE开发板 / ESP32S3-EYE Development Board
   依赖库 / Dependencies : esp_http_server.h - HTTP服务器库 / HTTP Server Library
                esp_log.h - 日志库 / Logging Library
@@ -23,17 +24,21 @@
                2. 在HTTP请求处理函数中调用auth_verify()验证认证 / Call auth_verify() in HTTP request handler to verify authentication
                3. 认证失败时调用auth_send_401()发送401响应 / Call auth_send_401() to send 401 response when authentication fails
                4. 定期调用auth_cleanup_expired_sessions()清理过期会话 / Call auth_cleanup_expired_sessions() periodically to clean up expired sessions
+               5. 定期调用auth_cleanup_expired_ip_auth()清理过期IP授权 / Call auth_cleanup_expired_ip_auth() periodically to clean up expired IP authorizations
   参数调整 / Parameter Adjustment : MAX_SESSIONS - 最大会话数量（默认20）/ Maximum number of sessions (default 20)
                SESSION_EXPIRE_TIME - 会话过期时间（默认14天）/ Session expiration time (default 14 days)
+               IP_AUTH_EXPIRE_TIME - IP授权过期时间（14天）/ IP authorization expiration time (default 5 minutes)
                AUTH_USERNAME - 认证用户名（默认admin）/ Authentication username (default admin)
                AUTH_PASSWORD - 认证密码（默认password123）/ Authentication password (default password123)
                调整建议：根据实际需求调整会话数量和过期时间 / Adjustment suggestion: Adjust session count and expiration time based on actual needs
-  最新更新 / Latest Updates : 1. 添加会话管理功能 / Added session management
-               2. 添加Base64编码解码功能 / Added Base64 encoding and decoding
-               3. 添加会话ID生成功能 / Added session ID generation
-               4. 添加客户端IP地址获取功能 / Added client IP address retrieval
-               5. 添加过期会话清理功能 / Added expired session cleanup
+  最新更新 / Latest Updates : 1. 添加IP授权管理功能，解决视频流重复认证问题 / Added IP authorization management to solve video stream repeated authentication issue
+               2. 添加会话管理功能 / Added session management
+               3. 添加Base64编码解码功能 / Added Base64 encoding and decoding
+               4. 添加会话ID生成功能 / Added session ID generation
+               5. 添加客户端IP地址获取功能 / Added client IP address retrieval
+               6. 添加过期会话清理功能 / Added expired session cleanup
   注意事项 / Important Notes : 会话14天后自动过期，需要重新登录 / Sessions expire automatically after 14 days, need to re-login
+               IP授权5分钟后自动过期，用于视频流等/img标签请求 / IP authorization expires automatically after 5 minutes, used for video stream and other img tag requests
                会话与客户端IP绑定，防止会话劫持 / Sessions are bound to client IP to prevent session hijacking
                所有敏感接口都需要认证 / All sensitive interfaces require authentication
 **********************************************************************/
@@ -52,6 +57,9 @@ static const char *TAG = "AUTH";
 
 // 会话数组 / Session array
 static auth_session_t sessions[MAX_SESSIONS];
+
+// IP授权数组 / IP authorization array
+static ip_auth_t ip_auth_list[MAX_SESSIONS];
 
 // 初始化标志 / Initialization flag
 static bool auth_initialized = false;
@@ -242,11 +250,14 @@ bool auth_init(void) {
         return true;
     }
     
-    // 初始化会话数组
+    // 初始化会话数组 / Initialize session array
     memset(sessions, 0, sizeof(sessions));
     
+    // 初始化IP授权数组 / Initialize IP authorization array
+    memset(ip_auth_list, 0, sizeof(ip_auth_list));
+    
     auth_initialized = true;
-    ESP_LOGI(TAG, "Auth initialized");
+    ESP_LOGI(TAG, "Auth initialized with IP authorization support");
     return true;
 }
 
@@ -316,6 +327,9 @@ auth_result_t auth_verify_basic(httpd_req_t *req) {
     snprintf(cookie_header, sizeof(cookie_header), "session_id=%s; Max-Age=%d; Path=/; HttpOnly; SameSite=Lax", 
              session->session_id, SESSION_EXPIRE_TIME);
     httpd_resp_set_hdr(req, "Set-Cookie", cookie_header);
+    
+    // 添加IP授权，用于视频流等/img标签请求 / Add IP authorization for video stream and other img tag requests
+    auth_add_ip_auth(client_ip);
     
     ESP_LOGI(TAG, "Basic authentication successful: %s, IP: %s, Session: %s", username, client_ip, session->session_id);
     ESP_LOGI(TAG, "Set-Cookie header: %s", cookie_header);
@@ -390,23 +404,36 @@ auth_result_t auth_verify_session(httpd_req_t *req) {
 }
 
 /**
- * @brief 验证认证（Basic或会话）
+ * @brief 验证认证（Basic、会话或IP授权）
  */
 auth_result_t auth_verify(httpd_req_t *req) {
-    // 优先检查会话
+    // 优先检查会话 / Check session first
     auth_result_t session_result = auth_verify_session(req);
     if(session_result == AUTH_SUCCESS) {
         return AUTH_SUCCESS;
     }
     
-    // 会话无效，检查Basic Authentication
+    // 会话无效，检查IP授权（用于视频流等/img标签请求）/ Check IP authorization (for video stream and other img tag requests)
+    auth_result_t ip_result = auth_verify_ip(req);
+    if(ip_result == AUTH_SUCCESS) {
+        ESP_LOGD(TAG, "IP authorization verified successfully");
+        return AUTH_SUCCESS;
+    }
+    
+    // 会话和IP授权都无效，检查Basic Authentication
     auth_result_t basic_result = auth_verify_basic(req);
     if(basic_result == AUTH_SUCCESS) {
         return AUTH_SUCCESS;
     }
     
-    // 都失败，返回会话结果（优先返回会话错误）
-    return session_result != AUTH_NO_CREDENTIALS ? session_result : basic_result;
+    // 都失败，返回最具体的错误 / Return the most specific error
+    if(session_result != AUTH_NO_CREDENTIALS) {
+        return session_result;
+    }
+    if(ip_result != AUTH_NO_CREDENTIALS) {
+        return ip_result;
+    }
+    return basic_result;
 }
 
 /**
@@ -490,5 +517,143 @@ uint32_t auth_clear_all_sessions(void) {
         }
     }
     ESP_LOGI(TAG, "Cleared all sessions: %u", cleared_count);
+    return cleared_count;
+}
+
+/**
+ * @brief 查找IP授权
+ * @param client_ip 客户端IP地址
+ * @return ip_auth_t* IP授权指针，未找到返回NULL
+ */
+static ip_auth_t *find_ip_auth(const char *client_ip) {
+    for(int i = 0; i < MAX_SESSIONS; i++) {
+        if(ip_auth_list[i].active && strcmp(ip_auth_list[i].client_ip, client_ip) == 0) {
+            return &ip_auth_list[i];
+        }
+    }
+    return NULL;
+}
+
+/**
+ * @brief 验证IP授权
+ */
+auth_result_t auth_verify_ip(httpd_req_t *req) {
+    // 获取客户端IP
+    char client_ip[16];
+    if(!get_client_ip(req, client_ip, sizeof(client_ip))) {
+        ESP_LOGE(TAG, "Failed to get client IP for IP auth verification");
+        return AUTH_FAILED;
+    }
+    
+    // 查找IP授权
+    ip_auth_t *ip_auth = find_ip_auth(client_ip);
+    if(!ip_auth) {
+        ESP_LOGD(TAG, "No IP authorization found for: %s", client_ip);
+        return AUTH_NO_CREDENTIALS;
+    }
+    
+    // 检查IP授权是否过期
+    uint32_t current_time = time(NULL);
+    if(current_time - ip_auth->auth_time > IP_AUTH_EXPIRE_TIME) {
+        ESP_LOGW(TAG, "IP authorization expired for: %s", client_ip);
+        ip_auth->active = false;
+        return AUTH_SESSION_EXPIRED;
+    }
+    
+    // 更新最后访问时间
+    ip_auth->last_access_time = current_time;
+    
+    ESP_LOGD(TAG, "IP authorization valid for: %s", client_ip);
+    return AUTH_SUCCESS;
+}
+
+/**
+ * @brief 添加IP授权
+ */
+bool auth_add_ip_auth(const char *client_ip) {
+    // 首先检查是否已有该IP的授权
+    ip_auth_t *existing = find_ip_auth(client_ip);
+    if(existing) {
+        // 更新现有授权
+        uint32_t current_time = time(NULL);
+        existing->auth_time = current_time;
+        existing->last_access_time = current_time;
+        ESP_LOGI(TAG, "Updated IP authorization for: %s", client_ip);
+        return true;
+    }
+    
+    // 查找空闲槽位
+    for(int i = 0; i < MAX_SESSIONS; i++) {
+        if(!ip_auth_list[i].active) {
+            // 设置客户端IP
+            strncpy(ip_auth_list[i].client_ip, client_ip, sizeof(ip_auth_list[i].client_ip) - 1);
+            ip_auth_list[i].client_ip[sizeof(ip_auth_list[i].client_ip) - 1] = '\0';
+            
+            // 设置时间
+            uint32_t current_time = time(NULL);
+            ip_auth_list[i].auth_time = current_time;
+            ip_auth_list[i].last_access_time = current_time;
+            
+            // 激活授权
+            ip_auth_list[i].active = true;
+            
+            ESP_LOGI(TAG, "Added IP authorization for: %s", client_ip);
+            return true;
+        }
+    }
+    
+    ESP_LOGE(TAG, "No free IP authorization slots");
+    return false;
+}
+
+/**
+ * @brief 清理过期IP授权
+ */
+uint32_t auth_cleanup_expired_ip_auth(void) {
+    uint32_t cleaned_count = 0;
+    uint32_t current_time = time(NULL);
+    
+    for(int i = 0; i < MAX_SESSIONS; i++) {
+        if(ip_auth_list[i].active) {
+            if(current_time - ip_auth_list[i].auth_time > IP_AUTH_EXPIRE_TIME) {
+                ESP_LOGI(TAG, "Cleaning up expired IP authorization: %s", ip_auth_list[i].client_ip);
+                ip_auth_list[i].active = false;
+                cleaned_count++;
+            }
+        }
+    }
+    
+    if(cleaned_count > 0) {
+        ESP_LOGI(TAG, "Cleaned up %u expired IP authorizations", cleaned_count);
+    }
+    
+    return cleaned_count;
+}
+
+/**
+ * @brief 获取IP授权数量
+ */
+uint32_t auth_get_ip_auth_count(void) {
+    uint32_t count = 0;
+    for(int i = 0; i < MAX_SESSIONS; i++) {
+        if(ip_auth_list[i].active) {
+            count++;
+        }
+    }
+    return count;
+}
+
+/**
+ * @brief 清除所有IP授权
+ */
+uint32_t auth_clear_all_ip_auth(void) {
+    uint32_t cleared_count = 0;
+    for(int i = 0; i < MAX_SESSIONS; i++) {
+        if(ip_auth_list[i].active) {
+            ip_auth_list[i].active = false;
+            cleared_count++;
+        }
+    }
+    ESP_LOGI(TAG, "Cleared all IP authorizations: %u", cleared_count);
     return cleared_count;
 }
