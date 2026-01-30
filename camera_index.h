@@ -548,6 +548,7 @@ const char index_ov2640_html[] = R"rawliteral(
                 <div id="loading" style="text-align:center; padding:20px; color:#666;" data-lang="loadingStream">正在加载视频流...</div>
             </div>
             <div style="margin-top: 15px; text-align: center;">
+                <button id="toggle-stream" class="btn-primary" onclick="toggleStream()" data-lang="startStream">开始视频流</button>
                 <button class="btn-primary" onclick="capturePhoto()" data-lang="capturePhoto">拍照</button>
                 <button class="btn-success" onclick="openStreamInNewTab()" data-lang="openStreamNewTab">在新标签页中打开视频流</button>
             </div>
@@ -678,7 +679,9 @@ const char index_ov2640_html[] = R"rawliteral(
                 veryHighQuality: "Very High Quality (5)",
                 brightness: "Brightness",
                 contrast: "Contrast",
-                saturation: "Saturation"
+                saturation: "Saturation",
+                startStream: "Start Stream",
+                stopStream: "Stop Stream"
             },
             zh: {
                 title: "ESP32-S3监控控制台",
@@ -705,7 +708,9 @@ const char index_ov2640_html[] = R"rawliteral(
                 veryHighQuality: "极高质量 (5)",
                 brightness: "亮度",
                 contrast: "对比度",
-                saturation: "饱和度"
+                saturation: "饱和度",
+                startStream: "开始视频流",
+                stopStream: "停止视频流"
             }
         };
         
@@ -904,52 +909,43 @@ const char index_ov2640_html[] = R"rawliteral(
             window.open(streamUrl, '_blank');
         }
         
-        // 视频流重试机制 / Video stream retry mechanism
-        let retryCount = 0;
-        const maxRetries = 10;
-        const retryInterval = 3000; // 3秒重试一次
-        
-        // 设置视频流URL / Set video stream URL
-        function setStreamUrl() {
+        // 切换视频流开关 / Toggle video stream
+        function toggleStream() {
             const streamImg = document.getElementById('stream');
+            const toggleBtn = document.getElementById('toggle-stream');
             const streamUrl = 'http://' + window.location.hostname + ':81/stream';
-            streamImg.src = streamUrl;
-            console.log('设置视频流URL:', streamUrl, '重试次数:', retryCount);
-        }
-        
-        // 视频流加载失败处理 / Video stream load failure handling
-        function handleStreamError() {
-            const streamImg = document.getElementById('stream');
-            console.error('视频流加载失败，准备重试...');
             
-            retryCount++;
-            if (retryCount <= maxRetries) {
-                // 延迟重试 / Delay before retry
-                setTimeout(() => {
-                    setStreamUrl();
-                }, retryInterval);
+            if (toggleBtn.getAttribute('data-state') === 'streaming') {
+                // 停止流 / Stop stream
+                streamImg.src = '';
+                streamImg.style.display = 'none';
+                toggleBtn.setAttribute('data-state', 'stopped');
+                toggleBtn.className = 'btn-primary';
+                
+                // 更新按钮文本 / Update button text
+                const lang = currentLanguage;
+                toggleBtn.textContent = translations[lang]['startStream'];
+                toggleBtn.setAttribute('data-lang', 'startStream');
+                
+                document.getElementById('loading').style.display = 'none';
             } else {
-                console.error('已达到最大重试次数，停止重试');
-                alert('视频流加载失败，请刷新页面重试');
+                // 开始流 / Start stream
+                streamImg.src = streamUrl;
+                streamImg.style.display = 'block';
+                toggleBtn.setAttribute('data-state', 'streaming');
+                toggleBtn.className = 'btn-danger';
+                
+                // 更新按钮文本 / Update button text
+                const lang = currentLanguage;
+                toggleBtn.textContent = translations[lang]['stopStream'];
+                toggleBtn.setAttribute('data-lang', 'stopStream');
+                
+                document.getElementById('loading').style.display = 'block';
             }
-        }
-        
-        // 视频流加载成功处理 / Video stream load success handling
-        function handleStreamLoad() {
-            console.log('视频流加载成功');
-            retryCount = 0; // 重置重试计数
         }
         
         // 页面加载完成后启动 / Start after page load completes
         window.onload = function() {
-            const streamImg = document.getElementById('stream');
-            // 添加事件监听器 / Add event listeners
-            streamImg.onerror = handleStreamError;
-            streamImg.onload = handleStreamLoad;
-            
-            // 初始加载视频流 / Initial load video stream
-            setStreamUrl();
-            
             // 初始更新SD卡信息和运行时长 / Initial update SD card info and uptime
             updateSDInfo();
             
@@ -977,11 +973,6 @@ const char index_ov2640_html[] = R"rawliteral(
             }
         }
         
-        // 视频流加载成功处理 / Video stream load success handling
-        function handleStreamLoad() {
-            console.log('视频流加载成功');
-            retryCount = 0; // 重置重试计数
-        }
         
         // 更新SD卡信息 / Update SD card information和运行时长
         function updateSDInfo() {

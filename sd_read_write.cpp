@@ -828,13 +828,6 @@ int cleanInvalidVideoFiles(void){
         file = root.openNextFile();
     }
     
-    // 输出清理结果
-    if(num > 0){
-        Serial.printf("Cleaned up %d invalid video file(s)\n", num);
-    } else {
-        Serial.println("No invalid video files found");
-    }
-    
     // 返回删除的文件数量
     return num;
 }

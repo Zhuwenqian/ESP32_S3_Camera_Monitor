@@ -87,8 +87,8 @@ This project is modified from following open-source projects:
     - Open `ESP32_S3_Camera_Monitor.ino`
     - Find and modify the following lines:
       ```cpp
-      const char* ssid     = "your_ssid";
-      const char* password = "your_password";
+      const char* ssid     = "Your_WiFi_Name";
+      const char* password = "Your_WiFi_Password";
       ```
     - Open `auth.h`
     - Find and modify the following lines:
@@ -265,8 +265,8 @@ The authors and Zhipu AI Technology Co., Ltd. (Beijing Zhipu Huazhang Technology
    - 打开 `ESP32_S3_Camera_Monitor.ino`
    - 找到并修改以下行：
      ```cpp
-     const char* ssid     = "your_ssid";
-     const char* password = "your_password";
+     const char* ssid     = "你的WiFi名称";
+     const char* password = "你的WiFi密码";
      ```
    - 打开 `auth.h`
    - 找到并修改以下行：

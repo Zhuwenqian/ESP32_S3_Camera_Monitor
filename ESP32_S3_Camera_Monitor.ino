@@ -183,7 +183,8 @@ void setup() {
   Serial.println("Cleaning up invalid video files... / 清理无效视频文件...");
   int cleanedFiles = cleanInvalidVideoFiles();
   if(cleanedFiles > 0){
-    Serial.printf("Cleaned up %d invalid video file(s) / 清理了 %d 个无效视频文件\n", cleanedFiles);
+    Serial.printf("Cleaned up %d invalid video file(s)\n", cleanedFiles);
+    Serial.printf("清理了 %d 个无效视频文件\n", cleanedFiles);
   } else if(cleanedFiles == 0){
     Serial.println("No invalid video files found / 未发现无效视频文件");
   } else {

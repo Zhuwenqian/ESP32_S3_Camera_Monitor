@@ -370,4 +370,16 @@ bool isRecordingVideo(void);
  */
 const char* getCurrentVideoFilename(void);
 
+/**
+ * @brief 清理无效视频文件函数 / Clean up invalid video files function
+ * @details 功能说明 / Function description:
+ *          1. 遍历videos目录中的所有文件 / 1. Iterate through all files in videos directory
+ *          2. 检查每个文件的大小是否为0KB / 2. Check if each file size is 0KB
+ *          3. 删除所有大小为0KB的视频文件 / 3. Delete all video files with 0KB size
+ *          4. 返回删除的文件数量 / 4. Return the number of deleted files
+ * @note 用于清理启动时可能产生的无效视频文件 / Used to clean up invalid video files that may be generated during startup
+ * @return int 返回删除的文件数量，失败返回-1 / Returns number of deleted files, -1 on failure
+ */
+int cleanInvalidVideoFiles(void);
+
 #endif
