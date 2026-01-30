@@ -28,6 +28,35 @@ This project is modified from the following open-source projects:
 
 ## Update Log
 
+### 2026-01-30 - Optimized Web Interface Layout and Settings
+**Updates:**
+- Moved pan-tilt control section to the top of the web interface
+  - Positioned right after language/theme selectors for easier access
+  - Improved user experience by prioritizing camera angle controls
+- Removed "Loading video stream..." text overlay
+  - Cleaner interface without loading text blocking the video area
+  - Video stream displays immediately when available
+- Changed default resolution from HD (1280x720) to XGA (1024x768)
+  - Better balance between image quality and streaming performance
+  - XGA resolution provides good detail while maintaining smooth frame rates
+- Centered video stream display
+  - Added flexbox centering for consistent video positioning
+  - Video now displays in the center of the container regardless of resolution
+- Recompressed camera_index.h with updated HTML
+  - Compressed size: 7376 bytes (83.9% compression ratio)
+
+**Modified Files:**
+1. temp_index.html - Updated layout, removed loading text, changed default resolution, centered video
+2. camera_index.h - Recompressed with latest HTML changes
+
+**User Interface Improvements:**
+- Pan-tilt controls are now the first interactive element users see
+- Cleaner video display without loading text
+- Better default resolution for typical use cases
+- Improved visual alignment of video stream
+
+---
+
 ### 2026-01-30 - Fixed Tilt Servo Pin Conflict and Updated Documentation
 **Updates:**
 - Fixed tilt servo not working issue
