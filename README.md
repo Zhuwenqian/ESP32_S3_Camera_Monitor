@@ -1,6 +1,8 @@
 # ESP32-S3 Camera Monitor
 
-A network video monitoring system based on ESP32-S3-CAM, supporting real-time video streaming, photo capture, video recording, and more.
+A network video monitoring system based on ESP32-S3-CAM(GOOUUU version), supporting real-time video streaming, photo capture, video recording, and more.
+
+**Note:**The Chinese version of the document is located below the English document 
 
 ## ⚠️ License Declaration
 
@@ -178,7 +180,7 @@ The authors are not liable for any damages arising from the use of this software
 
 # ESP32-S3 摄像头监控
 
-基于ESP32-S3-CAM的网络视频监控系统，支持实时视频流、拍照、视频录制等功能。
+基于ESP32-S3-CAM(果云版)的网络视频监控系统，支持实时视频流、拍照、视频录制等功能。
 
 ## ⚠️ 许可证声明
 
