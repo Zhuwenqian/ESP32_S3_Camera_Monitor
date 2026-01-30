@@ -1,0 +1,1151 @@
+
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>ESP32-S3监控控制台</title>
+    <style>
+        :root {
+            /* 浅色主题变量 / Light theme variables */
+            --bg-color: #f5f5f5;
+            --container-bg: #ffffff;
+            --text-color: #333333;
+            --section-bg: #f9f9f9;
+            --section-title-color: #555555;
+            --border-color: #dddddd;
+            --btn-primary-bg: #007bff;
+            --btn-primary-hover: #0056b3;
+            --btn-success-bg: #28a745;
+            --btn-success-hover: #218838;
+            --btn-danger-bg: #dc3545;
+            --btn-danger-hover: #c82333;
+            --btn-warning-bg: #ffc107;
+            --btn-warning-hover: #e0a800;
+            --btn-warning-text: #212529;
+            --info-label-color: #666666;
+            --info-value-color: #333333;
+            --sd-info-value-color: #333333;
+            --sd-info-unit-color: #999999;
+            --setting-label-color: #666666;
+            --setting-border-color: #dddddd;
+            --setting-border-hover: #007bff;
+            --uptime-value-color: #333333;
+            --uptime-unit-color: #666666;
+            --language-label-color: #666666;
+            --loading-text-color: #666666;
+            --shadow-color: rgba(0, 0, 0, 0.1);
+        }
+        
+        [data-theme="dark"] {
+            /* 深色主题变量 / Dark theme variables */
+            --bg-color: #1a1a1a;
+            --container-bg: #2d2d2d;
+            --text-color: #e0e0e0;
+            --section-bg: #383838;
+            --section-title-color: #b0b0b0;
+            --border-color: #555555;
+            --btn-primary-bg: #007bff;
+            --btn-primary-hover: #0056b3;
+            --btn-success-bg: #28a745;
+            --btn-success-hover: #218838;
+            --btn-danger-bg: #dc3545;
+            --btn-danger-hover: #c82333;
+            --btn-warning-bg: #ffc107;
+            --btn-warning-hover: #e0a800;
+            --btn-warning-text: #212529;
+            --info-label-color: #b0b0b0;
+            --info-value-color: #e0e0e0;
+            --sd-info-value-color: #e0e0e0;
+            --sd-info-unit-color: #888888;
+            --setting-label-color: #b0b0b0;
+            --setting-border-color: #555555;
+            --setting-border-hover: #007bff;
+            --uptime-value-color: #e0e0e0;
+            --uptime-unit-color: #b0b0b0;
+            --language-label-color: #b0b0b0;
+            --loading-text-color: #b0b0b0;
+            --shadow-color: rgba(0, 0, 0, 0.3);
+        }
+        
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        
+        body {
+            font-family: Arial, sans-serif;
+            background-color: var(--bg-color);
+            padding: 20px;
+            transition: background-color 0.3s ease;
+        }
+        
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+            background-color: var(--container-bg);
+            padding: 20px;
+            border-radius: 10px;
+            box-shadow: 0 2px 10px var(--shadow-color);
+            transition: background-color 0.3s ease, box-shadow 0.3s ease;
+        }
+        
+        h1 {
+            text-align: center;
+            color: var(--text-color);
+            margin-bottom: 30px;
+            transition: color 0.3s ease;
+        }
+        
+        .control-section {
+            margin-bottom: 30px;
+            padding: 20px;
+            background-color: var(--section-bg);
+            border-radius: 5px;
+            transition: background-color 0.3s ease;
+        }
+        
+        .section-title {
+            font-size: 18px;
+            font-weight: bold;
+            color: var(--section-title-color);
+            margin-bottom: 15px;
+            transition: color 0.3s ease;
+        }
+        
+        .video-container {
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            width: 100%;
+        }
+        
+        .video-container img {
+            max-width: 100%;
+            height: auto;
+            display: block;
+            margin: 0 auto;
+        }
+        
+        #stream {
+            max-width: 100%;
+            height: auto;
+            border: 2px solid var(--border-color);
+            border-radius: 5px;
+            transition: border-color 0.3s ease;
+        }
+        
+        .control-buttons {
+            display: flex;
+            gap: 10px;
+            margin-bottom: 15px;
+            flex-wrap: wrap;
+        }
+        
+        .btn-primary {
+            background-color: var(--btn-primary-bg);
+            color: white;
+            border: none;
+            padding: 10px 20px;
+            border-radius: 5px;
+            cursor: pointer;
+            font-size: 14px;
+            transition: background-color 0.3s ease;
+        }
+        
+        .btn-primary:hover {
+            background-color: var(--btn-primary-hover);
+        }
+        
+        .btn-success {
+            background-color: var(--btn-success-bg);
+            color: white;
+            border: none;
+            padding: 10px 20px;
+            border-radius: 5px;
+            cursor: pointer;
+            font-size: 14px;
+            transition: background-color 0.3s ease;
+        }
+        
+        .btn-success:hover {
+            background-color: var(--btn-success-hover);
+        }
+        
+        .btn-danger {
+            background-color: var(--btn-danger-bg);
+            color: white;
+            border: none;
+            padding: 10px 20px;
+            border-radius: 5px;
+            cursor: pointer;
+            font-size: 14px;
+            transition: background-color 0.3s ease;
+        }
+        
+        .btn-danger:hover {
+            background-color: var(--btn-danger-hover);
+        }
+        
+        .btn-warning {
+            background-color: var(--btn-warning-bg);
+            color: var(--btn-warning-text);
+            border: none;
+            padding: 10px 20px;
+            border-radius: 5px;
+            cursor: pointer;
+            font-size: 14px;
+            transition: background-color 0.3s ease;
+        }
+        
+        .btn-warning:hover {
+            background-color: var(--btn-warning-hover);
+        }
+        
+        .slider-container {
+            margin-bottom: 15px;
+        }
+        
+        input[type="range"] {
+            width: 100%;
+            margin-bottom: 10px;
+        }
+        
+        .slider-value {
+            text-align: center;
+            color: var(--text-color);
+            transition: color 0.3s ease;
+        }
+        
+        .info-display {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 15px;
+        }
+        
+        .info-item {
+            padding: 15px;
+            background-color: var(--container-bg);
+            border-radius: 5px;
+            border: 1px solid var(--border-color);
+            transition: background-color 0.3s ease, border-color 0.3s ease;
+        }
+        
+        .info-label {
+            font-size: 14px;
+            color: var(--info-label-color);
+            margin-bottom: 5px;
+            transition: color 0.3s ease;
+        }
+        
+        .info-value {
+            font-size: 16px;
+            font-weight: bold;
+            color: var(--info-value-color);
+            transition: color 0.3s ease;
+        }
+        
+        .status-indicator {
+            display: inline-block;
+            width: 10px;
+            height: 10px;
+            border-radius: 50%;
+            margin-right: 5px;
+        }
+        
+        .status-online {
+            background-color: #28a745;
+        }
+        
+        .status-offline {
+            background-color: #dc3545;
+        }
+        
+        .sd-info {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 15px;
+            margin-top: 15px;
+        }
+        
+        .sd-info-item {
+            padding: 15px;
+            background-color: var(--container-bg);
+            border-radius: 5px;
+            border: 1px solid var(--border-color);
+            text-align: center;
+            transition: background-color 0.3s ease, border-color 0.3s ease;
+        }
+        
+        .sd-info-label {
+            font-size: 14px;
+            color: var(--info-label-color);
+            margin-bottom: 5px;
+            transition: color 0.3s ease;
+        }
+        
+        .sd-info-value {
+            font-size: 20px;
+            font-weight: bold;
+            color: var(--sd-info-value-color);
+            transition: color 0.3s ease;
+        }
+        
+        .sd-info-unit {
+            font-size: 14px;
+            color: var(--sd-info-unit-color);
+            margin-left: 5px;
+            transition: color 0.3s ease;
+        }
+        
+        .camera-settings {
+            display: grid;
+            grid-template-columns: repeat(2, 1fr);
+            gap: 15px;
+            margin-top: 15px;
+        }
+        
+        .setting-item {
+            display: flex;
+            flex-direction: column;
+        }
+        
+        .setting-label {
+            font-size: 14px;
+            color: var(--setting-label-color);
+            margin-bottom: 5px;
+            transition: color 0.3s ease;
+        }
+        
+        .setting-select {
+            padding: 8px;
+            border: 1px solid var(--setting-border-color);
+            border-radius: 5px;
+            font-size: 14px;
+            background-color: var(--container-bg);
+            color: var(--text-color);
+            cursor: pointer;
+            transition: border-color 0.3s ease, background-color 0.3s ease, color 0.3s ease;
+        }
+        
+        .setting-select:hover {
+            border-color: var(--setting-border-hover);
+        }
+        
+        .setting-select:focus {
+            outline: none;
+            border-color: var(--setting-border-hover);
+            box-shadow: 0 0 0 2px rgba(0, 123, 255, 0.25);
+        }
+        
+        .uptime-info {
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            padding: 20px;
+            background-color: var(--container-bg);
+            border-radius: 5px;
+            border: 1px solid var(--border-color);
+            transition: background-color 0.3s ease, border-color 0.3s ease;
+        }
+        
+        .uptime-value {
+            font-size: 24px;
+            font-weight: bold;
+            color: var(--uptime-value-color);
+            transition: color 0.3s ease;
+        }
+        
+        .uptime-unit {
+            font-size: 14px;
+            color: var(--uptime-unit-color);
+            margin-left: 10px;
+            transition: color 0.3s ease;
+        }
+        
+        .language-selector {
+            display: flex;
+            justify-content: flex-end;
+            align-items: center;
+            margin-bottom: 20px;
+            padding: 10px;
+            background-color: var(--section-bg);
+            border-radius: 5px;
+            transition: background-color 0.3s ease;
+        }
+        
+        .language-label {
+            font-size: 14px;
+            color: var(--language-label-color);
+            margin-right: 10px;
+            transition: color 0.3s ease;
+        }
+        
+        .language-select {
+            padding: 8px 12px;
+            border: 1px solid var(--setting-border-color);
+            border-radius: 5px;
+            font-size: 14px;
+            background-color: var(--container-bg);
+            color: var(--text-color);
+            cursor: pointer;
+            transition: border-color 0.3s ease, background-color 0.3s ease, color 0.3s ease;
+        }
+        
+        .language-select:hover {
+            border-color: var(--setting-border-hover);
+        }
+        
+        .language-select:focus {
+            outline: none;
+            border-color: var(--setting-border-hover);
+            box-shadow: 0 0 0 2px rgba(0, 123, 255, 0.25);
+        }
+        
+        .theme-selector {
+            display: flex;
+            justify-content: flex-end;
+            align-items: center;
+            margin-bottom: 20px;
+            padding: 10px;
+            background-color: var(--section-bg);
+            border-radius: 5px;
+            transition: background-color 0.3s ease;
+        }
+        
+        .theme-label {
+            font-size: 14px;
+            color: var(--language-label-color);
+            margin-right: 10px;
+            transition: color 0.3s ease;
+        }
+        
+        .theme-select {
+            padding: 8px 12px;
+            border: 1px solid var(--setting-border-color);
+            border-radius: 5px;
+            font-size: 14px;
+            background-color: var(--container-bg);
+            color: var(--text-color);
+            cursor: pointer;
+            transition: border-color 0.3s ease, background-color 0.3s ease, color 0.3s ease;
+        }
+        
+        .theme-select:hover {
+            border-color: var(--setting-border-hover);
+        }
+        
+        .theme-select:focus {
+            outline: none;
+            border-color: var(--setting-border-hover);
+            box-shadow: 0 0 0 2px rgba(0, 123, 255, 0.25);
+        }
+        
+        .selectors-container {
+            display: flex;
+            gap: 10px;
+            justify-content: flex-end;
+            margin-bottom: 20px;
+        }
+        
+        .selector-item {
+            flex: 1;
+            max-width: 200px;
+        }
+        
+        .pan-tilt-controls {
+            display: flex;
+            flex-direction: column;
+            gap: 20px;
+        }
+        
+        .pan-tilt-info {
+            display: grid;
+            grid-template-columns: repeat(2, 1fr);
+            gap: 15px;
+            padding: 15px;
+            background-color: var(--container-bg);
+            border-radius: 5px;
+            border: 1px solid var(--border-color);
+        }
+        
+        .pan-tilt-info-item {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 10px;
+        }
+        
+        .pan-tilt-label {
+            font-size: 14px;
+            color: var(--info-label-color);
+        }
+        
+        .pan-tilt-value {
+            font-size: 18px;
+            font-weight: bold;
+            color: var(--info-value-color);
+        }
+        
+        .pan-tilt-unit {
+            font-size: 14px;
+            color: var(--info-label-color);
+        }
+        
+        .pan-tilt-buttons {
+            display: flex;
+            gap: 10px;
+            flex-wrap: wrap;
+            justify-content: center;
+        }
+        
+        .pan-tilt-sliders {
+            display: grid;
+            grid-template-columns: repeat(2, 1fr);
+            gap: 20px;
+        }
+        
+        .slider-label {
+            font-size: 14px;
+            color: var(--setting-label-color);
+            margin-bottom: 5px;
+            display: block;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1 data-lang="title">ESP32-S3监控控制台</h1>
+        
+        <!-- 语言和主题选择器 -->
+        <div class="selectors-container">
+            <div class="selector-item">
+                <div class="language-selector">
+                    <span class="language-label" data-lang="language">Language / 语言</span>
+                    <select id="language-select" class="language-select" onchange="changeLanguage()">
+                        <option value="en">English</option>
+                        <option value="zh">中文</option>
+                    </select>
+                </div>
+            </div>
+            <div class="selector-item">
+                <div class="theme-selector">
+                    <span class="theme-label" data-lang="theme">Theme / 主题</span>
+                    <select id="theme-select" class="theme-select" onchange="changeTheme()">
+                        <option value="light" data-lang="lightTheme">Light / 浅色</option>
+                        <option value="dark" data-lang="darkTheme">Dark / 深色</option>
+                    </select>
+                </div>
+            </div>
+        </div>
+        
+        <!-- 云台控制区域 -->
+        <div class="control-section">
+            <div class="section-title" data-lang="panTiltControl">云台控制</div>
+            <div class="pan-tilt-controls">
+                <div class="pan-tilt-info">
+                    <div class="pan-tilt-info-item">
+                        <span class="pan-tilt-label" data-lang="currentPan">当前水平角度:</span>
+                        <span id="current-pan" class="pan-tilt-value">90</span>
+                        <span class="pan-tilt-unit">°</span>
+                    </div>
+                    <div class="pan-tilt-info-item">
+                        <span class="pan-tilt-label" data-lang="currentTilt">当前垂直角度:</span>
+                        <span id="current-tilt" class="pan-tilt-value">90</span>
+                        <span class="pan-tilt-unit">°</span>
+                    </div>
+                </div>
+                <div class="pan-tilt-buttons">
+                    <button class="btn-primary" onclick="moveServo('pan', -10)" data-lang="panLeft">左转</button>
+                    <button class="btn-primary" onclick="moveServo('pan', 10)" data-lang="panRight">右转</button>
+                    <button class="btn-primary" onclick="moveServo('tilt', -10)" data-lang="tiltUp">上转</button>
+                    <button class="btn-primary" onclick="moveServo('tilt', 10)" data-lang="tiltDown">下转</button>
+                    <button class="btn-warning" onclick="resetServo()" data-lang="resetServo">复位</button>
+                </div>
+                <div class="pan-tilt-sliders">
+                    <div class="slider-container">
+                        <label class="slider-label" data-lang="panAngle">水平角度</label>
+                        <input type="range" id="pan-slider" min="0" max="180" value="90" oninput="setServoPosition()">
+                        <div class="slider-value"><span id="pan-value">90</span>°</div>
+                    </div>
+                    <div class="slider-container">
+                        <label class="slider-label" data-lang="tiltAngle">垂直角度</label>
+                        <input type="range" id="tilt-slider" min="0" max="180" value="90" oninput="setServoPosition()">
+                        <div class="slider-value"><span id="tilt-value">90</span>°</div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        
+        <!-- 视频显示区域 -->
+        <div class="control-section">
+            <div class="section-title" data-lang="liveVideo">实时视频</div>
+            <div class="video-container">
+                <img id="stream" src="" alt="视频流" style="max-width: 100%; height: auto;">
+            </div>
+            <div style="margin-top: 15px; text-align: center;">
+                <button id="toggle-stream" class="btn-primary" onclick="toggleStream()" data-lang="startStream">开始视频流</button>
+                <button class="btn-primary" onclick="capturePhoto()" data-lang="capturePhoto">拍照</button>
+            </div>
+        </div>
+        
+        <!-- SD卡信息区域 -->
+        <div class="control-section">
+            <div class="section-title" data-lang="sdCardInfo">SD卡存储信息</div>
+            <div class="sd-info">
+                <div class="sd-info-item">
+                    <div class="sd-info-label" data-lang="totalSpace">总空间</div>
+                    <div class="sd-info-value">
+                        <span id="sd-total">--</span>
+                        <span class="sd-info-unit">GB</span>
+                    </div>
+                </div>
+                <div class="sd-info-item">
+                    <div class="sd-info-label" data-lang="usedSpace">已用空间</div>
+                    <div class="sd-info-value">
+                        <span id="sd-used">--</span>
+                        <span class="sd-info-unit">GB</span>
+                    </div>
+                </div>
+                <div class="sd-info-item">
+                    <div class="sd-info-label" data-lang="freeSpace">剩余空间</div>
+                    <div class="sd-info-value">
+                        <span id="sd-free">--</span>
+                        <span class="sd-info-unit">GB</span>
+                    </div>
+                </div>
+            </div>
+        </div>
+        
+        <!-- 运行时长区域 -->
+        <div class="control-section">
+            <div class="section-title" data-lang="systemUptime">系统运行时长</div>
+            <div class="uptime-info">
+                <div class="uptime-value">
+                    <span id="uptime">--:--:--</span>
+                    <span class="uptime-unit" data-lang="uptimeUnit">运行时间</span>
+                </div>
+            </div>
+        </div>
+        
+        <!-- 摄像头设置区域 -->
+        <div class="control-section">
+            <div class="section-title" data-lang="cameraSettings">摄像头设置</div>
+            <div class="camera-settings">
+                <div class="setting-item">
+                    <label class="setting-label" data-lang="resolution">分辨率</label>
+                    <select id="framesize" class="setting-select" onchange="applyCameraSettings()">
+                        <option value="10">QVGA (320x240)</option>
+                        <option value="7">SVGA (800x600)</option>
+                        <option value="6">HD (1280x720)</option>
+                        <option value="5" selected>XGA (1024x768)</option>
+                        <option value="3">SXGA (1280x1024)</option>
+                        <option value="4">UXGA (1600x1200)</option>
+                    </select>
+                </div>
+                <div class="setting-item">
+                    <label class="setting-label" data-lang="imageQuality">图像质量</label>
+                    <select id="quality" class="setting-select" onchange="applyCameraSettings()">
+                        <option value="63" data-lang="lowQuality">低质量 (63)</option>
+                        <option value="31" data-lang="mediumQuality">中等质量 (31)</option>
+                        <option value="10" selected data-lang="highQuality">高质量 (10)</option>
+                        <option value="5" data-lang="veryHighQuality">极高质量 (5)</option>
+                    </select>
+                </div>
+                <div class="setting-item">
+                    <label class="setting-label" data-lang="brightness">亮度</label>
+                    <select id="brightness" class="setting-select" onchange="applyCameraSettings()">
+                        <option value="-2">-2</option>
+                        <option value="-1">-1</option>
+                        <option value="0" selected>0</option>
+                        <option value="1">1</option>
+                        <option value="2">2</option>
+                    </select>
+                </div>
+                <div class="setting-item">
+                    <label class="setting-label" data-lang="contrast">对比度</label>
+                    <select id="contrast" class="setting-select" onchange="applyCameraSettings()">
+                        <option value="-2">-2</option>
+                        <option value="-1">-1</option>
+                        <option value="0" selected>0</option>
+                        <option value="1">1</option>
+                        <option value="2">2</option>
+                    </select>
+                </div>
+                <div class="setting-item">
+                    <label class="setting-label" data-lang="saturation">饱和度</label>
+                    <select id="saturation" class="setting-select" onchange="applyCameraSettings()">
+                        <option value="-2">-2</option>
+                        <option value="-1">-1</option>
+                        <option value="0" selected>0</option>
+                        <option value="1">1</option>
+                        <option value="2">2</option>
+                    </select>
+                </div>
+            </div>
+        </div>
+        
+    </div>
+    
+    <script>
+        // 语言翻译对象 / Language translation object
+        const translations = {
+            en: {
+                title: "ESP32-S3 Monitoring Console",
+                language: "Language",
+                theme: "Theme",
+                lightTheme: "Light",
+                darkTheme: "Dark",
+                liveVideo: "Live Video",
+                loadingStream: "Loading video stream...",
+                capturePhoto: "Capture Photo",
+                sdCardInfo: "SD Card Storage Info",
+                totalSpace: "Total Space",
+                usedSpace: "Used Space",
+                freeSpace: "Free Space",
+                systemUptime: "System Uptime",
+                uptimeUnit: "Uptime",
+                cameraSettings: "Camera Settings",
+                resolution: "Resolution",
+                imageQuality: "Image Quality",
+                lowQuality: "Low Quality (63)",
+                mediumQuality: "Medium Quality (31)",
+                highQuality: "High Quality (10)",
+                veryHighQuality: "Very High Quality (5)",
+                brightness: "Brightness",
+                contrast: "Contrast",
+                saturation: "Saturation",
+                startStream: "Start Stream",
+                stopStream: "Stop Stream",
+                panTiltControl: "Pan-Tilt Control",
+                currentPan: "Current Pan Angle:",
+                currentTilt: "Current Tilt Angle:",
+                panLeft: "Pan Left",
+                panRight: "Pan Right",
+                tiltUp: "Tilt Up",
+                tiltDown: "Tilt Down",
+                resetServo: "Reset",
+                panAngle: "Pan Angle",
+                tiltAngle: "Tilt Angle"
+            },
+            zh: {
+                title: "ESP32-S3监控控制台",
+                language: "语言",
+                theme: "主题",
+                lightTheme: "浅色",
+                darkTheme: "深色",
+                liveVideo: "实时视频",
+                loadingStream: "正在加载视频流...",
+                capturePhoto: "拍照",
+                sdCardInfo: "SD卡存储信息",
+                totalSpace: "总空间",
+                usedSpace: "已用空间",
+                freeSpace: "剩余空间",
+                systemUptime: "系统运行时长",
+                uptimeUnit: "运行时间",
+                cameraSettings: "摄像头设置",
+                resolution: "分辨率",
+                imageQuality: "图像质量",
+                lowQuality: "低质量 (63)",
+                mediumQuality: "中等质量 (31)",
+                highQuality: "高质量 (10)",
+                veryHighQuality: "极高质量 (5)",
+                brightness: "亮度",
+                contrast: "对比度",
+                saturation: "饱和度",
+                startStream: "开始视频流",
+                stopStream: "停止视频流",
+                panTiltControl: "云台控制",
+                currentPan: "当前水平角度:",
+                currentTilt: "当前垂直角度:",
+                panLeft: "左转",
+                panRight: "右转",
+                tiltUp: "上转",
+                tiltDown: "下转",
+                resetServo: "复位",
+                panAngle: "水平角度",
+                tiltAngle: "垂直角度"
+            }
+        };
+        
+        // 当前语言 / Current language
+        let currentLanguage = 'en';
+        
+        // 当前主题 / Current theme
+        let currentTheme = 'light';
+        
+        // 切换语言 / Change language
+        function changeLanguage() {
+            const langSelect = document.getElementById('language-select');
+            currentLanguage = langSelect.value;
+            
+            // 更新所有带有data-lang属性的元素 / Update all elements with data-lang attribute
+            const elements = document.querySelectorAll('[data-lang]');
+            elements.forEach(element => {
+                const key = element.getAttribute('data-lang');
+                if (translations[currentLanguage][key]) {
+                    element.textContent = translations[currentLanguage][key];
+                }
+            });
+            
+            // 保存语言偏好到localStorage / Save language preference to localStorage
+            localStorage.setItem('preferredLanguage', currentLanguage);
+        }
+        
+        // 切换主题 / Change theme
+        function changeTheme() {
+            const themeSelect = document.getElementById('theme-select');
+            currentTheme = themeSelect.value;
+            
+            // 设置data-theme属性 / Set data-theme attribute
+            if (currentTheme === 'dark') {
+                document.documentElement.setAttribute('data-theme', 'dark');
+            } else {
+                document.documentElement.removeAttribute('data-theme');
+            }
+            
+            // 保存主题偏好到localStorage / Save theme preference to localStorage
+            localStorage.setItem('preferredTheme', currentTheme);
+        }
+        
+        // 初始化语言 / Initialize language
+        function initializeLanguage() {
+            // 从localStorage读取语言偏好，如果没有则使用默认语言英语 / Read language preference from localStorage, use default English if not set
+            const savedLanguage = localStorage.getItem('preferredLanguage');
+            if (savedLanguage && translations[savedLanguage]) {
+                currentLanguage = savedLanguage;
+            } else {
+                currentLanguage = 'en';
+            }
+            
+            // 设置语言选择器的值 / Set language selector value
+            const langSelect = document.getElementById('language-select');
+            if (langSelect) {
+                langSelect.value = currentLanguage;
+            }
+            
+            // 应用语言 / Apply language
+            changeLanguage();
+        }
+        
+        // 初始化主题 / Initialize theme
+        function initializeTheme() {
+            // 从localStorage读取主题偏好，如果没有则使用默认主题浅色 / Read theme preference from localStorage, use default light if not set
+            const savedTheme = localStorage.getItem('preferredTheme');
+            if (savedTheme && (savedTheme === 'light' || savedTheme === 'dark')) {
+                currentTheme = savedTheme;
+            } else {
+                currentTheme = 'light';
+            }
+            
+            // 设置主题选择器的值 / Set theme selector value
+            const themeSelect = document.getElementById('theme-select');
+            if (themeSelect) {
+                themeSelect.value = currentTheme;
+            }
+            
+            // 应用主题 / Apply theme
+            changeTheme();
+        }
+        
+        // 页面加载时初始化语言和主题 / Initialize language and theme on page load
+        window.addEventListener('load', function() {
+            initializeLanguage();
+            initializeTheme();
+        });
+        
+        // 应用摄像头设置 / Apply camera settings
+        function applyCameraSettings() {
+            const framesize = document.getElementById('framesize').value;
+            const quality = document.getElementById('quality').value;
+            const brightness = document.getElementById('brightness').value;
+            const contrast = document.getElementById('contrast').value;
+            const saturation = document.getElementById('saturation').value;
+            
+            // 应用分辨率设置 / Apply resolution setting
+            fetch('/control?var=framesize&val=' + framesize)
+            .then(response => {
+                if (!response.ok) {
+                    throw new Error('设置分辨率失败');
+                }
+                console.log('分辨率设置成功:', framesize);
+            })
+            .catch(error => {
+                console.error('设置分辨率失败:', error);
+                alert('设置分辨率失败！');
+            });
+            
+            // 应用图像质量设置 / Apply image quality setting
+            fetch('/control?var=quality&val=' + quality)
+            .then(response => {
+                if (!response.ok) {
+                    throw new Error('设置图像质量失败');
+                }
+                console.log('图像质量设置成功:', quality);
+            })
+            .catch(error => {
+                console.error('设置图像质量失败:', error);
+                alert('设置图像质量失败！');
+            });
+            
+            // 应用亮度设置 / Apply brightness setting
+            fetch('/control?var=brightness&val=' + brightness)
+            .then(response => {
+                if (!response.ok) {
+                    throw new Error('设置亮度失败');
+                }
+                console.log('亮度设置成功:', brightness);
+            })
+            .catch(error => {
+                console.error('设置亮度失败:', error);
+                alert('设置亮度失败！');
+            });
+            
+            // 应用对比度设置 / Apply contrast setting
+            fetch('/control?var=contrast&val=' + contrast)
+            .then(response => {
+                if (!response.ok) {
+                    throw new Error('设置对比度失败');
+                }
+                console.log('对比度设置成功:', contrast);
+            })
+            .catch(error => {
+                console.error('设置对比度失败:', error);
+                alert('设置对比度失败！');
+            });
+            
+            // 应用饱和度设置 / Apply saturation setting
+            fetch('/control?var=saturation&val=' + saturation)
+            .then(response => {
+                if (!response.ok) {
+                    throw new Error('设置饱和度失败');
+                }
+                console.log('饱和度设置成功:', saturation);
+            })
+            .catch(error => {
+                console.error('设置饱和度失败:', error);
+                alert('设置饱和度失败！');
+            });
+            
+            // 重新加载视频流以应用新设置 / Reload video stream to apply new settings
+            setTimeout(() => {
+                const streamImg = document.getElementById('stream');
+                const currentSrc = streamImg.src;
+                streamImg.src = '';
+                setTimeout(() => {
+                    streamImg.src = currentSrc;
+                }, 100);
+            }, 500);
+        }
+        
+        // 拍照功能 / Photo capture function
+        function capturePhoto() {
+            // 使用GET请求，因为app_httpd.cpp中的capture_handler是GET方法 / Use GET request because capture_handler in app_httpd.cpp is GET method
+            fetch('/capture')
+            .then(response => {
+                // 创建图片URL并在新窗口打开 / Create image URL and open in new window
+                const blob = response.blob();
+                return blob.then(blob => {
+                    const url = URL.createObjectURL(blob);
+                    window.open(url);
+                });
+            })
+            .catch(error => {
+                console.error('拍照失败:', error);
+                alert('拍照失败！');
+            });
+        }
+        
+        // 切换视频流开关 / Toggle video stream
+        function toggleStream() {
+            const streamImg = document.getElementById('stream');
+            const toggleBtn = document.getElementById('toggle-stream');
+            const streamUrl = 'http://' + window.location.hostname + ':81/stream';
+            
+            if (toggleBtn.getAttribute('data-state') === 'streaming') {
+                // 停止流 / Stop stream
+                streamImg.src = '';
+                streamImg.style.display = 'none';
+                toggleBtn.setAttribute('data-state', 'stopped');
+                toggleBtn.className = 'btn-primary';
+                
+                // 更新按钮文本 / Update button text
+                const lang = currentLanguage;
+                toggleBtn.textContent = translations[lang]['startStream'];
+                toggleBtn.setAttribute('data-lang', 'startStream');
+                
+                document.getElementById('loading').style.display = 'none';
+            } else {
+                // 开始流 / Start stream
+                streamImg.src = streamUrl;
+                streamImg.style.display = 'block';
+                toggleBtn.setAttribute('data-state', 'streaming');
+                toggleBtn.className = 'btn-danger';
+                
+                // 更新按钮文本 / Update button text
+                const lang = currentLanguage;
+                toggleBtn.textContent = translations[lang]['stopStream'];
+                toggleBtn.setAttribute('data-lang', 'stopStream');
+                
+                document.getElementById('loading').style.display = 'block';
+            }
+        }
+        
+        // 页面加载完成后启动 / Start after page load completes
+        window.onload = function() {
+            // 初始更新SD卡信息和运行时长 / Initial update SD card info and uptime
+            updateSDInfo();
+            
+            // 每5秒更新一次SD卡信息 / Update SD card info every 5 seconds
+            setInterval(updateSDInfo, 5000);
+            
+            // 每秒更新运行时长 / Update uptime every second
+            setInterval(updateUptime, 1000);
+        };
+        
+        // 更新运行时长（本地计时）/ Update uptime (local timer)
+        let uptimeSeconds = 0;
+        function updateUptime() {
+            uptimeSeconds++;
+            const hours = Math.floor(uptimeSeconds / 3600);
+            const minutes = Math.floor((uptimeSeconds % 3600) / 60);
+            const seconds = uptimeSeconds % 60;
+            
+            const uptime = document.getElementById('uptime');
+            if (uptime) {
+                uptime.textContent = 
+                    String(hours).padStart(2, '0') + ':' + 
+                    String(minutes).padStart(2, '0') + ':' + 
+                    String(seconds).padStart(2, '0');
+            }
+        }
+        
+        
+        // 更新SD卡信息 / Update SD card information和运行时长
+        function updateSDInfo() {
+            fetch('/status')
+            .then(response => {
+                if (!response.ok) {
+                    throw new Error('网络响应错误');
+                }
+                return response.json();
+            })
+            .then(data => {
+                console.log('系统状态:', data);
+                // 更新SD卡信息 / Update SD card information
+                const totalSpace = document.getElementById('sd-total');
+                const usedSpace = document.getElementById('sd-used');
+                const freeSpace = document.getElementById('sd-free');
+                
+                if (totalSpace) totalSpace.textContent = data.sd_total || '--';
+                if (usedSpace) usedSpace.textContent = data.sd_used || '--';
+                if (freeSpace) freeSpace.textContent = data.sd_free || '--';
+                
+                // 初始化运行时长（从服务器获取初始值）
+                if (data.uptime && uptimeSeconds === 0) {
+                    const parts = data.uptime.split(':');
+                    if (parts.length === 3) {
+                        uptimeSeconds = parseInt(parts[0]) * 3600 + parseInt(parts[1]) * 60 + parseInt(parts[2]);
+                    }
+                }
+            })
+            .catch(error => {
+                console.error('获取系统状态失败:', error);
+                // 显示错误信息
+                const totalSpace = document.getElementById('sd-total');
+                const usedSpace = document.getElementById('sd-used');
+                const freeSpace = document.getElementById('sd-free');
+                
+                if (totalSpace) totalSpace.textContent = '错误';
+                if (usedSpace) usedSpace.textContent = '错误';
+                if (freeSpace) freeSpace.textContent = '错误';
+            });
+        }
+        
+        // 云台控制功能 / Pan-tilt control functions
+        
+        // 移动舵机 / Move servo
+        function moveServo(axis, delta) {
+            const panSlider = document.getElementById('pan-slider');
+            const tiltSlider = document.getElementById('tilt-slider');
+            
+            let pan = parseInt(panSlider.value);
+            let tilt = parseInt(tiltSlider.value);
+            
+            if (axis === 'pan') {
+                pan = Math.max(0, Math.min(180, pan + delta));
+                panSlider.value = pan;
+            } else if (axis === 'tilt') {
+                tilt = Math.max(0, Math.min(180, tilt + delta));
+                tiltSlider.value = tilt;
+            }
+            
+            setServoPosition();
+        }
+        
+        // 设置舵机位置 / Set servo position
+        function setServoPosition() {
+            const pan = parseInt(document.getElementById('pan-slider').value);
+            const tilt = parseInt(document.getElementById('tilt-slider').value);
+            
+            // 更新显示值 / Update displayed values
+            document.getElementById('pan-value').textContent = pan;
+            document.getElementById('tilt-value').textContent = tilt;
+            
+            // 发送请求到ESP32 / Send request to ESP32
+            fetch('/servo?pan=' + pan + '&tilt=' + tilt)
+            .then(response => response.json())
+            .then(data => {
+                if (data.status === 'ok') {
+                    // 更新当前角度显示 / Update current angle display
+                    document.getElementById('current-pan').textContent = data.pan;
+                    document.getElementById('current-tilt').textContent = data.tilt;
+                    console.log('舵机位置设置成功 / Servo position set successfully:', data);
+                } else {
+                    console.error('设置舵机位置失败 / Failed to set servo position:', data.message);
+                    alert('设置舵机位置失败 / Failed to set servo position: ' + data.message);
+                }
+            })
+            .catch(error => {
+                console.error('设置舵机位置失败 / Failed to set servo position:', error);
+                alert('设置舵机位置失败 / Failed to set servo position');
+            });
+        }
+        
+        // 复位舵机 / Reset servo
+        function resetServo() {
+            fetch('/servo?action=reset')
+            .then(response => response.json())
+            .then(data => {
+                if (data.status === 'ok') {
+                    // 更新滑块和显示值 / Update sliders and displayed values
+                    document.getElementById('pan-slider').value = 90;
+                    document.getElementById('tilt-slider').value = 90;
+                    document.getElementById('pan-value').textContent = 90;
+                    document.getElementById('tilt-value').textContent = 90;
+                    
+                    // 获取当前角度 / Get current angles
+                    fetch('/servo?action=status')
+                    .then(response => response.json())
+                    .then(statusData => {
+                        if (statusData.status === 'ok') {
+                            document.getElementById('current-pan').textContent = statusData.pan;
+                            document.getElementById('current-tilt').textContent = statusData.tilt;
+                        }
+                    });
+                    
+                    console.log('舵机复位成功 / Servo reset successfully');
+                } else {
+                    console.error('舵机复位失败 / Failed to reset servo:', data.message);
+                    alert('舵机复位失败 / Failed to reset servo: ' + data.message);
+                }
+            })
+            .catch(error => {
+                console.error('舵机复位失败 / Failed to reset servo:', error);
+                alert('舵机复位失败 / Failed to reset servo');
+            });
+        }
+    </script>
+</body>
+</html>
