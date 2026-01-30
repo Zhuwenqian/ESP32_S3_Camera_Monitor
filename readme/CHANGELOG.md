@@ -28,6 +28,108 @@ This project is modified from the following open-source projects:
 
 ## Update Log
 
+### 2026-01-30 - Fixed Tilt Servo Pin Conflict and Updated Documentation
+**Updates:**
+- Fixed tilt servo not working issue
+  - Root cause: GPIO 15 is used by camera (XCLK), causing pin conflict
+  - Changed tilt servo pin from GPIO 15 to GPIO 21
+  - Added detailed pin conflict documentation
+  - Added available pins list for reference
+- Updated servo_control.h with pin conflict warnings
+  - Documented camera-used pins (GPIO 4,5,6,7,8,9,10,11,12,13,15,16,17,18)
+  - Listed available pins (GPIO 1,2,3,14,19,20,21,35-48)
+  - Added recommended pins (GPIO 14, 21) near power pins for easy wiring
+
+**Modified Files:**
+1. servo_control.h - Updated tilt servo pin from 15 to 21, added pin conflict documentation
+
+**Problem Solved:**
+- Fixed tilt servo (vertical rotation) not responding
+- Pin conflict between tilt servo (GPIO 15) and camera XCLK signal
+- Both pan and tilt servos now work correctly
+
+**Hardware Connection Update:**
+- Pan servo (horizontal): GPIO 14 (unchanged)
+- Tilt servo (vertical): GPIO 21 (changed from GPIO 15)
+- Power: 5V external power recommended
+- GND: Common ground with ESP32
+
+---
+
+### 2026-01-30 - Fixed Gzip Compression and Added Complete Pan-Tilt Control Interface
+**Updates:**
+- Fixed gzip compression issue that caused "Failed to load resource" error
+  - Recompressed HTML with proper gzip format (level 9 compression)
+  - Updated HTML size from 36832 bytes to 7436 bytes (83.8% compression ratio)
+  - Added comprehensive pan-tilt control interface to Web UI
+  - Added Cache-Control header to prevent caching issues
+- Enhanced pan-tilt control Web interface
+  - Added real-time angle display (current pan and tilt angles)
+  - Added directional control buttons (Left, Right, Up, Down)
+  - Added angle sliders for precise control (0-180 degrees)
+  - Added reset button to return to default position (90, 90)
+  - Supports both English and Chinese interfaces
+  - Added proper error handling and user feedback
+
+**Modified Files:**
+1. camera_index.h - Recompressed with updated HTML including pan-tilt controls
+2. app_httpd.cpp - Added Cache-Control header for index handler
+3. temp_index.html - Added complete pan-tilt control UI with CSS and JavaScript
+
+**Technical Details:**
+- Gzip compression verified with decompression test
+- HTML structure validated and confirmed complete
+- Pan-tilt control functions:
+  - moveServo(axis, delta) - Move servo by specified delta
+  - setServoPosition() - Set servo position from sliders
+  - resetServo() - Reset servos to default position
+- API endpoints (unchanged):
+  - GET /servo?pan=90&tilt=45 - Set servo angles
+  - GET /servo?action=reset - Reset to default position
+  - GET /servo?action=status - Get current angles
+
+**Problem Solved:**
+- Fixed browser "Failed to load resource" error
+- Fixed blank page issue caused by incorrect gzip compression
+- Added missing pan-tilt control interface to Web UI
+
+---
+
+### 2026-01-30 - Added Pan-Tilt Servo Control and Optimized Code Space
+**Updates:**
+- Added pan-tilt servo control module using two SG-90 servos
+  - Pan servo (horizontal rotation): GPIO 14
+  - Tilt servo (vertical rotation): GPIO 21 (Note: GPIO 15 is used by camera XCLK)
+  - Supports smooth movement with configurable speed
+  - Provides HTTP API for servo control (/servo)
+- Optimized program storage space using gzip compression
+  - Converted HTML from 35892 bytes to 6156 bytes (82.8% compression ratio)
+  - Saved approximately 30KB of program storage space
+  - Added Content-Encoding: gzip header support
+- Updated Web interface with pan-tilt control panel
+  - Added directional control buttons (Up, Down, Left, Right)
+  - Added angle display and reset button
+  - Supports both English and Chinese interfaces
+
+**Modified Files:**
+1. servo_control.h - New file: Servo control header with configuration
+2. servo_control.cpp - New file: Servo control implementation using ESP32Servo library
+3. app_httpd.cpp - Added servo_handler for HTTP API and gzip support
+4. ESP32_S3_Camera_Monitor.ino - Added servo initialization
+5. camera_index.h - Converted to gzip compressed format
+
+**Technical Details:**
+- Uses ESP32Servo library (v1.1.0) for servo control
+- Servo angle range: 0-180 degrees
+- Default position: 90 degrees (center)
+- Smooth movement with 15ms delay per step
+- API endpoints:
+  - GET /servo?pan=90&tilt=45 - Set servo angles
+  - GET /servo?action=reset - Reset to default position
+  - GET /servo?action=status - Get current angles
+
+---
+
 ### 2026-01-30 - Fixed Video Stream Auto-Acquisition Issue
 **Updates:**
 - Removed automatic video stream acquisition on page load
@@ -819,6 +921,45 @@ Dark Theme:
 
 **修改的文件：**
 1. camera_index.h - 更新 HTML 结构和 JavaScript 逻辑
+
+---
+
+### 2026-01-29 - 添加无效视频文件清理功能
+**更新内容：**
+- 添加无效视频文件（0KB 文件）自动清理功能
+- 系统启动时自动检查并删除 0KB 的视频文件
+- 通过清理损坏的视频文件提高系统可靠性
+
+**修改的文件：**
+1. sd_read_write.h - 添加 cleanInvalidVideoFiles() 函数声明
+2. sd_read_write.cpp - 实现 cleanInvalidVideoFiles() 函数
+3. ESP32_S3_Camera_Monitor.ino - 在 setup 函数中添加清理调用
+
+---
+
+### 2026-01-29 - 调整默认摄像头参数
+**更新内容：**
+- 将摄像头默认分辨率从 SVGA (1280x720) 调整为 XGA (1024x768)
+- 将视频录制默认帧率从 15fps 调整为 20fps
+- 将视频录制默认分辨率从 1280x720 调整为 1024x768
+
+**修改的文件：**
+1. ESP32_S3_Camera_Monitor.ino - 更新摄像头配置和视频录制参数
+
+---
+
+### 2026-01-29 - 添加语言和主题选择功能
+**更新内容：**
+- 添加语言选择功能（英语和中文）
+- 添加主题选择功能（浅色和深色主题）
+- 实现所有 UI 元素的双语支持
+- 实现平滑的主题切换动画（0.3秒）
+- 添加 localStorage 支持以保存语言和主题偏好
+- 设置默认语言为英语
+- 设置默认主题为浅色
+
+**修改的文件：**
+1. camera_index.h - 添加语言和主题选择 UI、CSS 变量、JavaScript 函数
 
 ---
 

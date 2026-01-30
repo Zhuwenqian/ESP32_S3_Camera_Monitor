@@ -62,6 +62,7 @@
 #include "camera_index.h"
 #include "sd_read_write.h"
 #include "auth.h"
+#include "servo_control.h"
 
 #if defined(ARDUINO_ARCH_ESP32) && defined(CONFIG_ARDUHAL_ESP_LOG)
 #include "esp32-hal-log.h"
@@ -770,7 +771,7 @@ static esp_err_t win_handler(httpd_req_t *req)
 }
 
 static esp_err_t index_handler(httpd_req_t *req){
-    // 验证认证
+    // 验证认证 / Verify authentication
     auth_result_t auth_result = auth_verify(req);
     if(auth_result != AUTH_SUCCESS) {
         ESP_LOGW(TAG, "Index handler: authentication failed (%d)", auth_result);
@@ -778,8 +779,111 @@ static esp_err_t index_handler(httpd_req_t *req){
     }
 
     httpd_resp_set_type(req, "text/html");
-    // 使用我们的未压缩HTML文件
-    return httpd_resp_send(req, (const char *)index_ov2640_html, strlen(index_ov2640_html));
+    httpd_resp_set_hdr(req, "Content-Encoding", "gzip");
+    httpd_resp_set_hdr(req, "Cache-Control", "no-cache, no-store, must-revalidate");
+    // 使用gzip压缩的HTML文件 / Use gzip compressed HTML file
+    return httpd_resp_send(req, (const char *)index_ov2640_html_gz, INDEX_OV2640_HTML_GZ_LEN);
+}
+
+// =================== / ===================
+// Servo Control Handler / 云台控制处理器
+// =================== / ===================
+
+/**
+ * Servo control handler / 云台控制处理器
+ * 
+ * API接口 / API Interface:
+ * - GET /servo?pan=90&tilt=45    设置舵机角度 / Set servo angles
+ * - GET /servo?action=reset      重置到默认位置 / Reset to default position
+ * - GET /servo?action=status     获取当前角度 / Get current angles
+ * 
+ * 参数说明 / Parameter Description:
+ * - pan: 水平角度 (0-180) / Horizontal angle (0-180)
+ * - tilt: 垂直角度 (0-180) / Vertical angle (0-180)
+ * - action: 特殊操作 / Special action
+ *           - reset: 重置到默认位置 / Reset to default position
+ *           - status: 返回当前角度JSON / Return current angle JSON
+ */
+static esp_err_t servo_handler(httpd_req_t *req)
+{
+    // 验证认证 / Verify authentication
+    auth_result_t auth_result = auth_verify(req);
+    if(auth_result != AUTH_SUCCESS) {
+        ESP_LOGW(TAG, "Servo handler: authentication failed (%d)", auth_result);
+        return auth_send_401(req);
+    }
+
+    char *buf = NULL;
+    char pan_str[8];
+    char tilt_str[8];
+    char action_str[16];
+    
+    if (parse_get(req, &buf) != ESP_OK) {
+        return ESP_FAIL;
+    }
+
+    // 检查是否为特殊操作 / Check for special actions
+    if (httpd_query_key_value(buf, "action", action_str, sizeof(action_str)) == ESP_OK) {
+        if (strcmp(action_str, "reset") == 0) {
+            // 重置舵机位置 / Reset servo position
+            servo_resetPosition();
+            free(buf);
+            httpd_resp_set_hdr(req, "Access-Control-Allow-Origin", "*");
+            return httpd_resp_send(req, "{\"status\":\"ok\",\"message\":\"Servos reset to default position\"}", 
+                                   strlen("{\"status\":\"ok\",\"message\":\"Servos reset to default position\"}"));
+        }
+        else if (strcmp(action_str, "status") == 0) {
+            // 返回当前角度 / Return current angles
+            char json_response[128];
+            snprintf(json_response, sizeof(json_response), 
+                     "{\"status\":\"ok\",\"pan\":%d,\"tilt\":%d}", 
+                     servo_getPanAngle(), servo_getTiltAngle());
+            free(buf);
+            httpd_resp_set_type(req, "application/json");
+            httpd_resp_set_hdr(req, "Access-Control-Allow-Origin", "*");
+            return httpd_resp_send(req, json_response, strlen(json_response));
+        }
+    }
+
+    // 解析角度参数 / Parse angle parameters
+    bool has_pan = (httpd_query_key_value(buf, "pan", pan_str, sizeof(pan_str)) == ESP_OK);
+    bool has_tilt = (httpd_query_key_value(buf, "tilt", tilt_str, sizeof(tilt_str)) == ESP_OK);
+    
+    if (!has_pan && !has_tilt) {
+        free(buf);
+        httpd_resp_send_404(req);
+        return ESP_FAIL;
+    }
+
+    int pan_angle = servo_getPanAngle();
+    int tilt_angle = servo_getTiltAngle();
+    
+    if (has_pan) {
+        pan_angle = atoi(pan_str);
+    }
+    if (has_tilt) {
+        tilt_angle = atoi(tilt_str);
+    }
+
+    free(buf);
+
+    // 设置舵机角度 / Set servo angles
+    bool success = servo_setPosition(pan_angle, tilt_angle, true);
+    
+    if (success) {
+        char json_response[128];
+        snprintf(json_response, sizeof(json_response), 
+                 "{\"status\":\"ok\",\"pan\":%d,\"tilt\":%d}", 
+                 pan_angle, tilt_angle);
+        httpd_resp_set_type(req, "application/json");
+        httpd_resp_set_hdr(req, "Access-Control-Allow-Origin", "*");
+        return httpd_resp_send(req, json_response, strlen(json_response));
+    } else {
+        httpd_resp_set_type(req, "application/json");
+        httpd_resp_set_hdr(req, "Access-Control-Allow-Origin", "*");
+        return httpd_resp_send(req, "{\"status\":\"error\",\"message\":\"Invalid angle\"}", 
+                               strlen("{\"status\":\"error\",\"message\":\"Invalid angle\"}"));
+    }
 }
 
 void startCameraServer()
@@ -864,6 +968,13 @@ void startCameraServer()
         .user_ctx = NULL
     };
 
+    httpd_uri_t servo_uri = {
+        .uri = "/servo",
+        .method = HTTP_GET,
+        .handler = servo_handler,
+        .user_ctx = NULL
+    };
+
     ra_filter_init(&ra_filter, 20);
 
 
@@ -881,6 +992,7 @@ void startCameraServer()
         httpd_register_uri_handler(camera_httpd, &greg_uri);
         httpd_register_uri_handler(camera_httpd, &pll_uri);
         httpd_register_uri_handler(camera_httpd, &win_uri);
+        httpd_register_uri_handler(camera_httpd, &servo_uri);
     }
 
     config.server_port += 1;

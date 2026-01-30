@@ -34,6 +34,7 @@
 #include <time.h>
 #include "sd_read_write.h"
 #include "auth.h"
+#include "servo_control.h"
 
 // =================== / ===================
 // Select camera model / 选择摄像头型号 / 选择摄像头型号
@@ -84,6 +85,14 @@ void setup() {
     Serial.println("Failed to initialize auth module / 认证模块初始化失败");
   } else {
     Serial.println("Auth module initialized / 认证模块已初始化");
+  }
+
+  // 初始化云台舵机 / Initialize pan-tilt servos / Initialize pan-tilt servos
+  Serial.println("Initializing pan-tilt servos... / 初始化云台舵机...");
+  if(servo_init()) {
+    Serial.println("Pan-tilt servos initialized / 云台舵机初始化完成");
+  } else {
+    Serial.println("Failed to initialize pan-tilt servos / 云台舵机初始化失败");
   }
 
   // 记录启动时间 / Record start time / Record start time
