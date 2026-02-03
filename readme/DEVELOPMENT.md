@@ -875,8 +875,6 @@ ArduinoJson
 
 ### 15.3 Actual Use
 
-- Open source the 3D model of the monitor (STL&STP&3MF)
-- BOM (Bill of Materials) table
 - Create an assembly tutorial and upload it to Bilibili
 
 
@@ -1767,4 +1765,5 @@ ArduinoJson
 **文档版本：** 1.2
 **创建日期：** 2026-01-26
 **最后更新：** 2026-01-30
+
 
