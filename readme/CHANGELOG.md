@@ -28,6 +28,36 @@ This project is modified from the following open-source projects:
 
 ## Update Log
 
+### 2026-02-03 - Added SOLIDWORKS 3D Model and BOM
+**Updates:**
+- Created complete pan-tilt mechanical design using SOLIDWORKS
+- Designed 9 individual parts: Gimbal base, Gimbal Center, Gimbal Top, Controller Enclosure, Controller Enclosure Cover, OV5640 Camera, Servo-Pan, Servo-Tilt
+- Generated engineering drawings for all parts with dimensions
+- Exported 3MF files for 3D printing
+- Created comprehensive Bill of Materials (BOM) with 16 items
+- Documented assembly instructions and print settings
+- Designed for SG-90 servos and ESP32-S3-CAM compatibility
+- Created assembly demonstration video
+- Included camera datasheet and schematic diagram
+
+**Design Files:**
+- Main assembly: ESP32-S3 Camera Monitor.SLDASM
+- Individual parts: 9 .SLDPRT files
+- Engineering drawings: ESP32-S3 Camera Monitor eDrawing.SLDDRW
+- 3D print files: 5 .3mf files (Controller Enclosure, Cover, Gimbal base, Center, Top)
+- BOM: BOM.xls
+- Documentation: Assembly video, datasheet, schematic
+
+**Hardware Specifications:**
+- Pan range: 0-180 degrees (horizontal)
+- Tilt range: 0-180 degrees (vertical)
+- Material: PLA/PETG recommended
+- Print settings: 0.2mm layer height, 3 perimeters, 20% infill
+- Estimated print time: ~4-6 hours total
+- Included electronics enclosure for ESP32-S3-CAM
+
+---
+
 ### 2026-01-30 - Fixed Authentication Flow and Session Management
 **Updates:**
 - Fixed repeated authentication prompts when accessing video stream
