@@ -59,8 +59,8 @@
 // =================== / ===========================
 // Enter your WiFi credentials / 输入WiFi凭证 / 输入WiFi凭证
 // =================== / ===========================
-const char* ssid     = "your_ssid";
-const char* password = "your_password";
+const char* ssid     = "zhuline";
+const char* password = "zhu8437547";
 
 // 运行时长统计 / Uptime counter / Uptime counter
 unsigned long startTime = 0;

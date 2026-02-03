@@ -17,7 +17,7 @@
                11. 视频自动分段录制功能（2分钟一段）/ Auto-segmented video recording function (2 minutes per segment)
                12. 无效视频文件清理功能（删除0KB视频文件）/ Invalid video file cleanup function (delete 0KB video files)
   作者 / Author : ESP32-S3监控项目 / ESP32-S3 Monitoring Project
-  修改日期 / Modification Date : 2026-01-29
+  修改日期 / Modification Date : 2026-02-03
   硬件平台 / Hardware Platform : ESP32S3-EYE开发板 / ESP32S3-EYE Development Board
   依赖库 / Dependencies : FS.h - 文件系统基础库 / File System Base Library
                SD_MMC.h - SD_MMC驱动库 / SD_MMC Driver Library
@@ -40,6 +40,10 @@
                8. 修改照片和视频文件名为时间戳格式（YYYYMMDDHHMM）/ Changed photo and video filename format to timestamp (YYYYMMDDHHMM)
                9. 使用NTP时间同步获取准确时间 / Uses NTP time synchronization to get accurate time
                10. 添加无效视频文件清理功能（cleanInvalidVideoFiles）/ Added invalid video file cleanup function (cleanInvalidVideoFiles)
+               11. 优化SD卡空间管理逻辑，实现动态阈值检测 / Optimized SD card space management logic, implemented dynamic threshold detection
+               12. 添加按时间删除最旧文件功能（deleteOldestFiles）/ Added delete oldest files by time function (deleteOldestFiles)
+               13. 添加空间检测频率和清理优先级配置 / Added space check interval and cleanup priority configuration
+               14. 添加异常处理机制 / Added exception handling mechanism
   注意事项 / Important Notes : 时间戳格式使用NTP同步的系统时间，确保时间准确性 / Timestamp format uses NTP-synchronized system time to ensure time accuracy
 **********************************************************************/
 
@@ -833,21 +837,27 @@ int cleanInvalidVideoFiles(void){
 }
 
 /**
- * @brief 检查SD卡空间是否达到阈值
- * @return bool 达到阈值返回true，否则返回false
+ * @brief 检查SD卡空间是否需要清理
+ * @return bool 需要清理返回true，否则返回false
  * @details 功能说明：
- *          1. 获取SD卡已用空间
- *          2. 比较已用空间是否达到55GB阈值
- *          3. 返回比较结果
- * @note 阈值为55GB，当已用空间达到55GB时返回true
+ *          1. 获取SD卡总容量和剩余空间
+ *          2. 计算动态阈值（总容量 - 保留空间）
+ *          3. 比较剩余空间是否小于保留空间
+ *          4. 返回比较结果
+ * @note 动态计算阈值：当剩余空间小于保留空间（默认5GB）时返回true
+ *       适应不同容量规格的SD卡（如32GB、64GB、128GB等）
  */
-bool checkSDSpaceThreshold(void){
-    // 获取已用空间（GB单位，乘以100保留2位小数）
-    uint64_t usedSpaceGB = getSDUsedSpaceMB() / 100;
+bool checkSDSpaceNeedsCleanup(void){
+    // 获取总空间和已用空间
+    uint64_t totalBytes = SD_MMC.totalBytes();
+    uint64_t usedBytes = SD_MMC.usedBytes();
     
-    // 检查是否达到阈值
-    if(usedSpaceGB >= SD_SPACE_THRESHOLD_GB){
-        Serial.printf("SD卡空间已达到阈值: %lluGB >= %dGB\n", usedSpaceGB, SD_SPACE_THRESHOLD_GB);
+    // 计算剩余空间（GB单位）
+    uint64_t freeSpaceGB = (totalBytes - usedBytes) / (1024.0 * 1024.0 * 1024.0);
+    
+    // 检查剩余空间是否小于保留空间阈值
+    if(freeSpaceGB < SD_SPACE_RESERVE_GB){
+        Serial.printf("SD卡空间不足，需要清理: 剩余空间 %lluGB < 保留空间 %dGB\n", freeSpaceGB, SD_SPACE_RESERVE_GB);
         return true;
     }
     
@@ -855,40 +865,197 @@ bool checkSDSpaceThreshold(void){
 }
 
 /**
+ * @brief 获取指定目录中的文件信息列表
+ * @param dirname 目录路径
+ * @param files 文件信息数组指针
+ * @param maxFiles 最大文件数量
+ * @return int 返回文件数量，失败返回-1
+ * @details 功能说明：
+ *          1. 打开指定目录
+ *          2. 遍历目录中的所有文件
+ *          3. 获取每个文件的路径、名称、大小和修改时间
+ *          4. 存储到文件信息数组中
+ * @note 用于获取目录中的文件信息，方便按时间排序和删除
+ */
+int getFileInfoList(const char * dirname, FileInfo *files, int maxFiles){
+    // 打开目录
+    File root = SD_MMC.open(dirname);
+    if(!root){
+        Serial.printf("Failed to open directory: %s\n", dirname);
+        return -1;
+    }
+    
+    // 检查是否为目录
+    if(!root.isDirectory()){
+        Serial.printf("Not a directory: %s\n", dirname);
+        return -1;
+    }
+
+    // 打开第一个文件
+    File file = root.openNextFile();
+    
+    // 遍历目录中的所有文件
+    int num = 0;
+    while(file && num < maxFiles){
+        // 只处理文件，不处理子目录
+        if(!file.isDirectory()){
+            // 构建完整文件路径
+            snprintf(files[num].path, sizeof(files[num].path), "%s/%s", dirname, file.name());
+            snprintf(files[num].name, sizeof(files[num].name), "%s", file.name());
+            files[num].size = file.size();
+            files[num].mtime = file.getLastWrite();
+            num++;
+        }
+        // 打开下一个文件
+        file = root.openNextFile();
+    }
+    
+    // 返回文件数量
+    return num;
+}
+
+/**
+ * @brief 按时间排序文件信息列表
+ * @param files 文件信息数组指针
+ * @param fileCount 文件数量
+ * @param ascending 排序顺序，true=升序（旧→新），false=降序（新→旧）
+ * @details 功能说明：
+ *          1. 使用冒泡排序算法按文件修改时间排序
+ *          2. 升序时最旧的文件在前面
+ *          3. 降序时最新的文件在前面
+ * @note 按文件修改时间排序，升序时最旧的文件在前面
+ */
+void sortFilesByTime(FileInfo *files, int fileCount, bool ascending){
+    // 使用冒泡排序按时间排序
+    for(int i = 0; i < fileCount - 1; i++){
+        for(int j = 0; j < fileCount - i - 1; j++){
+            bool needSwap = ascending ? (files[j].mtime > files[j+1].mtime) : (files[j].mtime < files[j+1].mtime);
+            if(needSwap){
+                // 交换文件信息
+                FileInfo temp = files[j];
+                files[j] = files[j+1];
+                files[j+1] = temp;
+            }
+        }
+    }
+}
+
+/**
+ * @brief 删除指定目录中最旧的N个文件
+ * @param dirname 目录路径
+ * @param maxFilesToDelete 最大删除文件数量
+ * @return int 返回删除的文件数量，失败返回-1
+ * @details 功能说明：
+ *          1. 获取目录中的所有文件信息
+ *          2. 按修改时间升序排序（最旧的在前面）
+ *          3. 逐个删除最旧的文件
+ *          4. 累计删除的文件大小
+ *          5. 当释放空间达到2GB或删除了maxFilesToDelete个文件时停止
+ * @note 按文件修改时间排序，删除最旧的文件
+ *       清理出约2GB空间后停止
+ */
+int deleteOldestFiles(const char * dirname, int maxFilesToDelete){
+    // 定义文件信息数组（最多100个文件）
+    FileInfo files[100];
+    
+    // 获取文件信息列表
+    int fileCount = getFileInfoList(dirname, files, 100);
+    if(fileCount <= 0){
+        Serial.printf("No files found in directory: %s\n", dirname);
+        return 0;
+    }
+    
+    // 按时间升序排序（最旧的在前面）
+    sortFilesByTime(files, fileCount, true);
+    
+    // 计算清理目标空间（字节）
+    uint64_t targetSpaceBytes = SD_CLEAN_TARGET_GB * 1024ULL * 1024ULL * 1024ULL;
+    uint64_t freedSpace = 0;
+    int deletedCount = 0;
+    
+    // 逐个删除最旧的文件
+    for(int i = 0; i < fileCount && i < maxFilesToDelete; i++){
+        // 检查是否已经释放了足够的空间
+        if(freedSpace >= targetSpaceBytes){
+            Serial.printf("已释放 %lluGB 空间，停止清理\n", freedSpace / (1024ULL * 1024ULL * 1024ULL));
+            break;
+        }
+        
+        // 删除文件
+        if(SD_MMC.remove(files[i].path)){
+            freedSpace += files[i].size;
+            deletedCount++;
+            Serial.printf("Deleted file: %s, Size: %llu bytes, Total freed: %llu bytes\n", 
+                         files[i].name, files[i].size, freedSpace);
+        } else {
+            Serial.printf("Failed to delete file: %s\n", files[i].path);
+        }
+    }
+    
+    Serial.printf("从 %s 目录删除了 %d 个文件，释放了 %lluGB 空间\n", 
+                 dirname, deletedCount, freedSpace / (1024ULL * 1024ULL * 1024ULL));
+    
+    return deletedCount;
+}
+
+/**
  * @brief 自动清理旧文件以释放空间
  * @return int 返回删除的文件数量，失败返回-1
  * @details 功能说明：
- *          1. 检查SD卡空间是否达到阈值
- *          2. 如果达到阈值，优先删除videos目录中的文件
- *          3. 如果videos目录为空或删除后仍不够，删除photos目录中的文件
- *          4. 返回删除的文件数量
- * @note 当SD卡空间达到55GB时，自动删除最旧的文件
- *       优先删除videos目录中的文件，然后删除photos目录中的文件
+ *          1. 检查SD卡空间是否需要清理
+ *          2. 如果需要清理，根据清理优先级配置选择删除策略
+ *          3. 优先删除videos目录中的文件（如果配置允许）
+ *          4. 如果videos目录为空或删除后仍不够，删除photos目录中的文件（如果配置允许）
+ *          5. 清理出约2GB空间后停止
+ *          6. 返回删除的文件数量
+ * @note 当SD卡剩余空间小于保留空间（默认5GB）时，自动删除最旧的文件
+ *       清理出约2GB空间后停止
+ *       清理优先级由SD_CLEANUP_PRIORITY配置：
+ *       0 = 只删除视频文件
+ *       1 = 优先删除视频，再删除照片
+ *       2 = 只删除照片文件
  */
 int autoCleanOldFiles(void){
-    // 检查SD卡空间是否达到阈值
-    if(!checkSDSpaceThreshold()){
-        Serial.println("SD卡空间未达到阈值，无需清理");
+    // 检查SD卡空间是否需要清理
+    if(!checkSDSpaceNeedsCleanup()){
+        Serial.println("SD卡空间充足，无需清理");
         return 0;
     }
     
     int totalDeleted = 0;
     
-    // 优先删除videos目录中的文件
-    Serial.println("开始清理videos目录中的旧文件...");
-    int deletedVideos = deleteAllFiles(VIDEO_DIR);
-    if(deletedVideos > 0){
-        totalDeleted += deletedVideos;
-        Serial.printf("已删除 %d 个视频文件\n", deletedVideos);
-    }
-    
-    // 如果删除videos文件后仍达到阈值，删除photos目录中的文件
-    if(checkSDSpaceThreshold()){
-        Serial.println("开始清理photos目录中的旧文件...");
-        int deletedPhotos = deleteAllFiles(PHOTO_DIR);
+    // 根据清理优先级配置选择删除策略
+    if(SD_CLEANUP_PRIORITY == 0){
+        // 只删除视频文件
+        Serial.println("清理策略：只删除videos目录中的文件");
+        int deletedVideos = deleteOldestFiles(VIDEO_DIR, 100);
+        if(deletedVideos > 0){
+            totalDeleted += deletedVideos;
+        }
+    } else if(SD_CLEANUP_PRIORITY == 1){
+        // 优先删除视频，再删除照片
+        Serial.println("清理策略：优先删除videos目录中的文件，再删除photos目录中的文件");
+        
+        // 优先删除videos目录中的文件
+        int deletedVideos = deleteOldestFiles(VIDEO_DIR, 100);
+        if(deletedVideos > 0){
+            totalDeleted += deletedVideos;
+        }
+        
+        // 如果删除videos文件后仍需要清理，删除photos目录中的文件
+        if(checkSDSpaceNeedsCleanup()){
+            Serial.println("videos目录清理后空间仍不足，开始清理photos目录...");
+            int deletedPhotos = deleteOldestFiles(PHOTO_DIR, 100);
+            if(deletedPhotos > 0){
+                totalDeleted += deletedPhotos;
+            }
+        }
+    } else if(SD_CLEANUP_PRIORITY == 2){
+        // 只删除照片文件
+        Serial.println("清理策略：只删除photos目录中的文件");
+        int deletedPhotos = deleteOldestFiles(PHOTO_DIR, 100);
         if(deletedPhotos > 0){
             totalDeleted += deletedPhotos;
-            Serial.printf("已删除 %d 个照片文件\n", deletedPhotos);
         }
     }
     

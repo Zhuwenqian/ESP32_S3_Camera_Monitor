@@ -1,8 +1,6 @@
 # ESP32-S3 Camera Monitor
 
-A network video monitoring system based on ESP32-S3-CAM(GOOUUU version), supporting real-time video streaming, photo capture, video recording, and more.
-
-**Note:**The Chinese version of the document is located below the English document 
+A network video monitoring system based on ESP32-S3-CAM, supporting real-time video streaming, photo capture, video recording, and more.
 
 ## ⚠️ License Declaration
 
@@ -38,7 +36,7 @@ This project is modified from following open-source projects:
 - Web-based photo capture and save to SD card
 - Video recording (AVI format, MJPEG encoding)
 - Automatic video segmentation (2 minutes per segment)
-- Automatic SD card space cleanup (55GB threshold)
+- Automatic SD card space cleanup (dynamic threshold, frees 2GB per cleanup)
 - HTTP Basic Authentication
 - NTP time synchronization
 - System uptime display
@@ -180,7 +178,7 @@ The authors are not liable for any damages arising from the use of this software
 
 # ESP32-S3 摄像头监控
 
-基于ESP32-S3-CAM(果云版)的网络视频监控系统，支持实时视频流、拍照、视频录制等功能。
+基于ESP32-S3-CAM的网络视频监控系统，支持实时视频流、拍照、视频录制等功能。
 
 ## ⚠️ 许可证声明
 
@@ -216,7 +214,7 @@ The authors are not liable for any damages arising from the use of this software
 - Web端控制拍照并保存到SD卡
 - 视频录制功能（AVI格式，MJPEG编码）
 - 视频自动分段录制（2分钟一段）
-- SD卡空间自动清理（55GB阈值）
+- SD卡空间自动清理（动态阈值，每次清理释放约2GB空间）
 - HTTP Basic Authentication认证
 - NTP时间同步
 - 系统运行时长显示

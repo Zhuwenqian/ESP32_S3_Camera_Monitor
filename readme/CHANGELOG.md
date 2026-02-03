@@ -28,6 +28,88 @@ This project is modified from the following open-source projects:
 
 ## Update Log
 
+### 2026-02-03 - Optimized SD Card Space Management Logic
+**Updates:**
+- Implemented dynamic space threshold detection (total capacity - 5GB)
+- Added function to delete oldest files by time (deleteOldestFiles)
+- Added space check interval configuration (SD_SPACE_CHECK_INTERVAL_MS, default 5 seconds)
+- Added cleanup priority configuration (SD_CLEANUP_PRIORITY, 0=videos only, 1=videos then photos, 2=photos only)
+- Added cleanup target space configuration (SD_CLEAN_TARGET_GB, default 2GB)
+- Added file information structure (FileInfo) to store file path, name, size, and modification time
+- Added getFileInfoList() function to get file information from directory
+- Added sortFilesByTime() function to sort files by modification time
+- Added exception handling mechanism for directory operations and file deletion
+- Replaced fixed 55GB threshold with dynamic threshold calculation
+- Changed cleanup strategy from deleting all files to deleting oldest files until 2GB space is freed
+- Updated autoCleanOldFiles() function to support configurable cleanup priority
+
+**Modified Files:**
+1. sd_read_write.h - Added new configuration parameters (SD_SPACE_RESERVE_GB, SD_CLEAN_TARGET_GB, SD_SPACE_CHECK_INTERVAL_MS, SD_CLEANUP_PRIORITY), added FileInfo structure, added new function declarations (checkSDSpaceNeedsCleanup, getFileInfoList, sortFilesByTime, deleteOldestFiles), updated file description
+2. sd_read_write.cpp - Implemented checkSDSpaceNeedsCleanup() function, implemented getFileInfoList() function, implemented sortFilesByTime() function, implemented deleteOldestFiles() function, updated autoCleanOldFiles() function to support configurable cleanup priority, replaced checkSDSpaceThreshold() with checkSDSpaceNeedsCleanup(), updated file description
+
+**Implemented Features:**
+1. Dynamic space threshold detection (adapts to different SD card capacities: 32GB, 64GB, 128GB, etc.)
+2. Delete oldest files by time (instead of deleting all files)
+3. Cleanup stops after freeing approximately 2GB space
+4. Configurable cleanup priority (videos only, videos then photos, photos only)
+5. Exception handling for directory operations and file deletion
+6. Detailed logging of cleanup operations
+
+**Technical Details:**
+- **Dynamic Threshold**: When free space < 5GB, trigger cleanup (adapts to any SD card capacity)
+- **Cleanup Target**: Free approximately 2GB space per cleanup operation
+- **Cleanup Priority**: 
+  - 0 = Only delete video files
+  - 1 = Prioritize videos, then photos (default)
+  - 2 = Only delete photo files
+- **File Selection**: Sort files by modification time, delete oldest files first
+- **Space Check Interval**: 5 seconds (configurable via SD_SPACE_CHECK_INTERVAL_MS)
+- **Exception Handling**: Complete error checking and reporting for directory operations and file deletion
+
+**Test Cases:**
+1. 32GB SD card with 28GB used → trigger cleanup (free space < 5GB)
+2. 64GB SD card with 60GB used → trigger cleanup (free space < 5GB)
+3. 128GB SD card with 124GB used → trigger cleanup (free space < 5GB)
+4. Cleanup stops after freeing 2GB space
+5. Delete oldest files first (by modification time)
+6. Videos directory empty → clean photos directory
+7. Cleanup priority 0 → only delete videos
+8. Cleanup priority 2 → only delete photos
+9. Directory not found → return -1, log error
+10. File deletion failed → log error, continue with next file
+
+---
+
+### 2026-02-03 - Added SOLIDWORKS 3D Model and BOM
+**Updates:**
+- Created complete pan-tilt mechanical design using SOLIDWORKS
+- Designed 9 individual parts: Gimbal base, Gimbal Center, Gimbal Top, Controller Enclosure, Controller Enclosure Cover, OV5640 Camera, Servo-Pan, Servo-Tilt
+- Generated engineering drawings for all parts with dimensions
+- Exported 3MF files for 3D printing
+- Created comprehensive Bill of Materials (BOM) with 16 items
+- Documented assembly instructions and print settings
+- Designed for SG-90 servos and ESP32-S3-CAM compatibility
+- Created assembly demonstration video
+- Included camera datasheet and schematic diagram
+
+**Design Files:**
+- Main assembly: ESP32-S3 Camera Monitor.SLDASM
+- Individual parts: 9 .SLDPRT files
+- Engineering drawings: ESP32-S3 Camera Monitor eDrawing.SLDDRW
+- 3D print files: 5 .3mf files (Controller Enclosure, Cover, Gimbal base, Center, Top)
+- BOM: BOM.xls
+- Documentation: Assembly video, datasheet, schematic
+
+**Hardware Specifications:**
+- Pan range: 0-180 degrees (horizontal)
+- Tilt range: 0-180 degrees (vertical)
+- Material: PLA/PETG recommended
+- Print settings: 0.2mm layer height, 3 perimeters, 20% infill
+- Estimated print time: ~4-6 hours total
+- Included electronics enclosure for ESP32-S3-CAM
+
+---
+
 ### 2026-01-30 - Fixed Authentication Flow and Session Management
 **Updates:**
 - Fixed repeated authentication prompts when accessing video stream
@@ -1396,6 +1478,58 @@ Dark Theme:
 - 实现自动删除旧文件功能（当SD卡空间达到55GB时）
 - 实现舵机控制功能
 - 测试运行时长显示功能稳定性
+
+---
+
+### 2026-02-03 - 优化SD卡空间管理逻辑
+**更新内容：**
+- 实现动态空间阈值检测（总容量 - 5GB）
+- 添加按时间删除最旧文件功能（deleteOldestFiles）
+- 添加空间检测频率配置（SD_SPACE_CHECK_INTERVAL_MS，默认5秒）
+- 添加清理优先级配置（SD_CLEANUP_PRIORITY，0=只删除视频，1=优先删除视频再删除照片，2=只删除照片）
+- 添加清理目标空间配置（SD_CLEAN_TARGET_GB，默认2GB）
+- 添加文件信息结构体（FileInfo）存储文件路径、名称、大小和修改时间
+- 添加getFileInfoList()函数获取目录中的文件信息
+- 添加sortFilesByTime()函数按修改时间排序文件
+- 添加异常处理机制用于目录操作和文件删除
+- 替换固定55GB阈值为动态阈值计算
+- 修改清理策略从删除所有文件改为删除最旧文件直到释放2GB空间
+- 更新autoCleanOldFiles()函数支持可配置清理优先级
+
+**修改的文件：**
+1. sd_read_write.h - 添加新配置参数（SD_SPACE_RESERVE_GB、SD_CLEAN_TARGET_GB、SD_SPACE_CHECK_INTERVAL_MS、SD_CLEANUP_PRIORITY），添加FileInfo结构体，添加新函数声明（checkSDSpaceNeedsCleanup、getFileInfoList、sortFilesByTime、deleteOldestFiles），更新文件描述
+2. sd_read_write.cpp - 实现checkSDSpaceNeedsCleanup()函数，实现getFileInfoList()函数，实现sortFilesByTime()函数，实现deleteOldestFiles()函数，更新autoCleanOldFiles()函数支持可配置清理优先级，用checkSDSpaceNeedsCleanup()替换checkSDSpaceThreshold()，更新文件描述
+
+**实现的功能：**
+1. 动态空间阈值检测（适应不同容量规格的SD卡：32GB、64GB、128GB等）
+2. 按时间删除最旧文件（而不是删除所有文件）
+3. 清理出约2GB空间后停止
+4. 可配置清理优先级（只删除视频、优先删除视频再删除照片、只删除照片）
+5. 目录操作和文件删除的异常处理
+6. 清理操作的详细日志记录
+
+**技术细节：**
+- **动态阈值**：当剩余空间 < 5GB时触发清理（适应任何SD卡容量）
+- **清理目标**：每次清理操作释放约2GB空间
+- **清理优先级**：
+  - 0 = 只删除视频文件
+  - 1 = 优先删除视频，再删除照片（默认）
+  - 2 = 只删除照片文件
+- **文件选择**：按修改时间排序文件，优先删除最旧的文件
+- **空间检测间隔**：5秒（可通过SD_SPACE_CHECK_INTERVAL_MS配置）
+- **异常处理**：目录操作和文件删除的完整错误检查和报告
+
+**测试用例：**
+1. 32GB SD卡已用28GB → 触发清理（剩余空间 < 5GB）
+2. 64GB SD卡已用60GB → 触发清理（剩余空间 < 5GB）
+3. 128GB SD卡已用124GB → 触发清理（剩余空间 < 5GB）
+4. 清理释放2GB空间后停止
+5. 优先删除最旧的文件（按修改时间）
+6. videos目录为空 → 清理photos目录
+7. 清理优先级0 → 只删除视频
+8. 清理优先级2 → 只删除照片
+9. 目录未找到 → 返回-1，记录错误
+10. 文件删除失败 → 记录错误，继续下一个文件
 
 ---
 

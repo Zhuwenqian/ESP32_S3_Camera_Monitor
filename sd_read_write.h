@@ -3,8 +3,8 @@
   文件用途 / File Purpose : SD_MMC存储卡读写功能头文件 / SD_MMC Storage Card Read/Write Header File
                声明了SD卡操作相关的函数原型和宏定义
                Declares function prototypes and macro definitions related to SD card operations
-  作者 / Author : ESP32-S3监控项目 / ESP32-S3 Monitoring Project
-  修改日期 / Modification Date : 2026-01-27
+  作者 / Author : www.freenove.com
+  修改日期 / Modification Date : 2026-02-03
   硬件平台 / Hardware Platform : ESP32S3-EYE开发板 / ESP32S3-EYE Development Board
   依赖库 / Dependencies : Arduino.h - Arduino核心库 / Arduino Core Library
                FS.h - 文件系统基础库 / File System Base Library
@@ -132,8 +132,24 @@ typedef struct {
     uint32_t size;          // 大小 / Size
 } AVI_INDEX_ENTRY;
 
-// SD卡空间阈值（GB）/ SD card space threshold (GB)
-#define SD_SPACE_THRESHOLD_GB 55
+// SD卡空间管理配置 / SD card space management configuration
+#define SD_SPACE_RESERVE_GB 5           // 保留空间阈值（GB），当剩余空间小于此值时触发清理 / Reserved space threshold (GB), triggers cleanup when free space is less than this value
+#define SD_CLEAN_TARGET_GB 2            // 清理目标空间（GB），每次清理释放约2GB空间 / Cleanup target space (GB), releases approximately 2GB space per cleanup
+#define SD_SPACE_CHECK_INTERVAL_MS 5000 // 空间检测间隔（毫秒），默认5秒检测一次 / Space check interval (ms), default 5 seconds
+
+// 清理优先级配置 / Cleanup priority configuration
+// 0 = 只删除视频文件 / Only delete video files
+// 1 = 优先删除视频，再删除照片 / Prioritize videos, then photos
+// 2 = 只删除照片文件 / Only delete photo files
+#define SD_CLEANUP_PRIORITY 1           // 清理优先级，默认1（优先删除视频，再删除照片）/ Cleanup priority, default 1 (prioritize videos, then photos)
+
+// 文件信息结构体 / File information structure
+typedef struct {
+    char path[128];          // 文件路径 / File path
+    char name[64];           // 文件名 / File name
+    uint64_t size;           // 文件大小（字节）/ File size (bytes)
+    time_t mtime;            // 修改时间（时间戳）/ Modification time (timestamp)
+} FileInfo;
 
 /**
  * @brief SD_MMC存储卡初始化函数 / SD_MMC storage card initialization function
@@ -316,17 +332,49 @@ int getFileList(const char * dirname, char *files[], int maxFiles);
 int deleteAllFiles(const char * dirname);
 
 /**
- * @brief 检查SD卡空间是否达到阈值 / Check if SD card space reaches threshold
- * @return bool 达到阈值返回true，否则返回false / Returns true if threshold reached, false otherwise
- * @note 阈值为55GB，当已用空间达到55GB时返回true / Threshold is 55GB, returns true when used space reaches 55GB
+ * @brief 检查SD卡空间是否需要清理 / Check if SD card space needs cleanup
+ * @return bool 需要清理返回true，否则返回false / Returns true if cleanup is needed, false otherwise
+ * @note 动态计算阈值：当剩余空间小于保留空间（默认5GB）时返回true / Dynamically calculates threshold: returns true when free space is less than reserved space (default 5GB)
+ *       适应不同容量规格的SD卡 / Adapts to SD cards of different capacities
  */
-bool checkSDSpaceThreshold(void);
+bool checkSDSpaceNeedsCleanup(void);
+
+/**
+ * @brief 获取指定目录中的文件信息列表 / Get file information list in specified directory
+ * @param dirname 目录路径 / Directory path
+ * @param files 文件信息数组指针 / File information array pointer
+ * @param maxFiles 最大文件数量 / Maximum number of files
+ * @return int 返回文件数量，失败返回-1 / Returns number of files, -1 on failure
+ * @note 获取文件路径、名称、大小和修改时间 / Gets file path, name, size, and modification time
+ */
+int getFileInfoList(const char * dirname, FileInfo *files, int maxFiles);
+
+/**
+ * @brief 按时间排序文件信息列表 / Sort file information list by time
+ * @param files 文件信息数组指针 / File information array pointer
+ * @param fileCount 文件数量 / Number of files
+ * @param ascending 排序顺序，true=升序（旧→新），false=降序（新→旧）/ Sort order, true=ascending (old→new), false=descending (new→old)
+ * @note 按文件修改时间排序，升序时最旧的文件在前面 / Sorts by file modification time, oldest files are first when ascending
+ */
+void sortFilesByTime(FileInfo *files, int fileCount, bool ascending);
+
+/**
+ * @brief 删除指定目录中最旧的N个文件 / Delete N oldest files in specified directory
+ * @param dirname 目录路径 / Directory path
+ * @param maxFilesToDelete 最大删除文件数量 / Maximum number of files to delete
+ * @return int 返回删除的文件数量，失败返回-1 / Returns number of files deleted, -1 on failure
+ * @note 按文件修改时间排序，删除最旧的文件 / Sorts by file modification time, deletes oldest files
+ *       清理出约2GB空间后停止 / Stops after freeing approximately 2GB space
+ */
+int deleteOldestFiles(const char * dirname, int maxFilesToDelete);
 
 /**
  * @brief 自动清理旧文件以释放空间 / Automatically clean up old files to free space
  * @return int 返回删除的文件数量，失败返回-1 / Returns number of files deleted, -1 on failure / Returns number of files deleted, -1 on failure
- * @note 当SD卡空间达到55GB时，自动删除最旧的文件 / When SD card space reaches 55GB, automatically deletes oldest files
+ * @note 当SD卡剩余空间小于保留空间（默认5GB）时，自动删除最旧的文件 / When SD card free space is less than reserved space (default 5GB), automatically deletes oldest files
+ *       清理出约2GB空间后停止 / Stops after freeing approximately 2GB space
  *       优先删除videos目录中的文件，然后删除photos目录中的文件 / Prioritizes deleting files in videos directory, then photos directory
+ *       清理优先级由SD_CLEANUP_PRIORITY配置 / Cleanup priority is configured by SD_CLEANUP_PRIORITY
  */
 int autoCleanOldFiles(void);
 

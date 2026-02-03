@@ -817,6 +817,12 @@ ArduinoJson
 - Monitor SD card storage space
 - System automatically cleans up invalid video files (0KB) on startup
 - Regularly check video recording quality and file integrity
+- SD card space automatic management:
+  - Dynamic threshold detection: triggers cleanup when free space < 5GB
+  - Delete oldest files by time: prioritizes deleting the oldest files
+  - Cleanup target: releases approximately 2GB space per cleanup
+  - Cleanup priority: configurable (videos only, videos then photos, photos only)
+  - Space check interval: checks every 5 seconds by default
 
 ### 13.2 Troubleshooting
 
@@ -1700,6 +1706,12 @@ ArduinoJson
 - 监控SD卡存储空间
 - 系统启动时自动清理无效视频文件（大小为0KB）
 - 定期检查视频录制质量和文件完整性
+- SD卡空间自动管理：
+  - 动态阈值检测：当剩余空间 < 5GB时触发清理
+  - 按时间删除最旧文件：优先删除最旧的文件
+  - 清理目标：每次清理释放约2GB空间
+  - 清理优先级：可配置（只删除视频、优先删除视频再删除照片、只删除照片）
+  - 空间检测频率：默认5秒检测一次
 
 ### 13.2 故障排查
 

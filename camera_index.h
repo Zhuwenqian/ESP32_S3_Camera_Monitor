@@ -1,6 +1,6 @@
 /*
  * 文件名 / Filename : camera_index.h
- * 
+ * 作者 / Author : Zhu Wenqian
  * 文件用途 / File Purpose :
  * 本文件包含Web界面的HTML代码（gzip压缩格式），提供完整的监控控制界面
  * This file contains HTML code for the web interface (gzip compressed), providing a complete monitoring control interface
