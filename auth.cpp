@@ -12,7 +12,7 @@
                6. 客户端IP地址获取 / Client IP address retrieval
                7. 会话查找和创建 / Session finding and creation
                8. 过期会话清理 / Expired session cleanup
-  作者 / Author : ESP32-S3监控项目 / ESP32-S3 Monitoring Project
+  作者 / Author : Zhu Wenqian
   修改日期 / Modification Date : 2026-01-30
   硬件平台 / Hardware Platform : ESP32S3-EYE开发板 / ESP32S3-EYE Development Board
   依赖库 / Dependencies : esp_http_server.h - HTTP服务器库 / HTTP Server Library

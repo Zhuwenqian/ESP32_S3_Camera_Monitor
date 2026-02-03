@@ -3,12 +3,12 @@
   Description : SG-90 servo control header for pan-tilt camera mount
                 SG-90舵机云台控制头文件，用于摄像头云台控制
                 支持两个SG-90舵机：水平旋转(Pan)和垂直旋转(Tilt)
-  Auther      : ESP32-S3 Monitoring Project
+  Auther      : Zhu Wenqian
   Modification: 2026-01-30
   
   硬件连接 / Hardware Connection:
   - Pan Servo (水平舵机): GPIO 14
-  - Tilt Servo (垂直舵机): GPIO 15
+  - Tilt Servo (垂直舵机): GPIO 21
   - Power (电源): 5V (外部供电推荐，避免ESP32供电不足)
   - GND (地线): 共地连接
   

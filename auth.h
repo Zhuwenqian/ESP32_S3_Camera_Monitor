@@ -12,7 +12,7 @@
                6. 过期会话清理 / Expired session cleanup
                7. 会话数量获取 / Session count retrieval
                8. 所有会话清除 / All sessions clearing
-  作者 / Author : ESP32-S3监控项目 / ESP32-S3 Monitoring Project
+  作者 / Author : Zhu Wenqian
   修改日期 / Modification Date : 2026-01-28
   硬件平台 / Hardware Platform : ESP32S3-EYE开发板 / ESP32S3-EYE Development Board
   依赖库 / Dependencies : esp_http_server.h - HTTP服务器库 / HTTP Server Library

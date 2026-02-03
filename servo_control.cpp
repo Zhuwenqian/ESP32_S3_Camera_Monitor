@@ -3,7 +3,7 @@
   Description : SG-90 servo control implementation for pan-tilt camera mount
                 SG-90舵机云台控制实现文件
                 实现水平(Pan)和垂直(Tilt)两个舵机的控制
-  Auther      : ESP32-S3 Monitoring Project
+  Auther      : Zhu Wenqian
   Modification: 2026-01-30
   
   依赖库 / Dependencies:
