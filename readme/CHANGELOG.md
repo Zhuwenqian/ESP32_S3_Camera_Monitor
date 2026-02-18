@@ -28,6 +28,99 @@ This project is modified from the following open-source projects:
 
 ## Update Log
 
+### 2026-02-04 - Added OTA Server and WS2812B LED Control
+**Updates:**
+- Implemented OTA (Over-the-Air) firmware upgrade functionality
+  - Created OTA server module (ota_server.h and ota_server.cpp)
+  - Supports firmware upload via HTTP POST request
+  - Includes authentication protection for OTA endpoint
+  - Provides progress tracking during firmware update
+  - Supports firmware verification after upload
+  - Automatic reboot after successful update
+- Implemented WS2812B LED control functionality
+  - Created LED control module (led_control.h and led_control.cpp)
+  - Uses Freenove WS2812 Lib for ESP32 library
+  - Supports multiple LED status indications
+  - FreeRTOS task-based LED control for non-blocking operation
+- Integrated LED status indication for system states
+  - Initialization: Blue LED slow flash (2s cycle: 1s on, 1s off)
+  - Camera ready: Green LED steady on
+  - Camera error: Red LED slow flash (2s cycle: 1s on, 1s off)
+  - SD card error: Red LED fast flash (1s cycle: 0.5s on, 0.5s off)
+  - Photo capture: Blue LED fast flash (0.4s cycle: 0.2s on, 0.2s off)
+- Modified SD card initialization to return status
+  - Changed sdmmcInit() return type from void to bool
+  - Returns true on success, false on failure
+  - Enables LED status indication for SD card errors
+- Updated main program to integrate OTA and LED functionality
+  - Added LED initialization in setup()
+  - Added OTA server initialization after WiFi connection
+  - Integrated LED status updates for camera and SD card initialization
+  - Added LED flash trigger on photo capture
+
+**Modified Files:**
+1. ota_server.h - New file: OTA server interface and function declarations
+2. ota_server.cpp - New file: OTA server implementation with authentication and progress tracking
+3. led_control.h - New file: LED control interface and status enumerations
+4. led_control.cpp - New file: LED control implementation with FreeRTOS task
+5. app_httpd.cpp - Added LED control include, integrated LED flash on photo capture
+6. ESP32_S3_Camera_Monitor.ino - Added LED and OTA initialization, integrated status updates
+7. sd_read_write.h - Changed sdmmcInit() return type from void to bool
+8. sd_read_write.cpp - Updated sdmmcInit() to return bool status
+
+**Implemented Features:**
+1. OTA Server Functionality:
+   - HTTP POST endpoint: /ota
+   - Requires authentication (Basic Auth)
+   - Supports firmware.bin file upload
+   - Progress tracking (0-100%)
+   - Firmware verification after upload
+   - Automatic reboot on success
+   - Error handling and rollback
+
+2. LED Status Indication:
+   - LED_OFF: LED off
+   - LED_INIT_SLOW_FLASH: Initialization slow flash (blue, 2s cycle)
+   - LED_CAMERA_READY: Camera ready (green steady)
+   - LED_CAMERA_ERROR: Camera error (red slow flash, 2s cycle)
+   - LED_SD_ERROR: SD card error (red fast flash, 1s cycle)
+   - LED_PHOTO_FLASH: Photo flash (blue fast flash, 0.4s cycle)
+
+3. Technical Implementation:
+   - LED control uses FreeRTOS task for non-blocking operation
+   - LED status changes are thread-safe
+   - Photo flash automatically returns to previous status
+   - LED colors: Green (0,255,0), Red (255,0,0), Blue (0,0,255), Off (0,0,0)
+   - OTA server runs on same HTTP server as web interface
+
+**Technical Details:**
+- **OTA Update Process:**
+  1. User uploads firmware.bin via POST /ota
+  2. Server verifies authentication
+  3. Server receives firmware data
+  4. Server verifies firmware integrity
+  5. Server writes firmware to flash
+  6. Server reboots device
+- **LED Control:**
+  - Uses ESP32 RMT (Remote Control) peripheral for precise timing
+  - FreeRTOS task runs at priority 2
+  - LED task delay: 50ms
+  - LED pin: GPIO 48 (configurable via LED_PIN in led_control.h)
+
+**Test Cases:**
+1. OTA upload with correct authentication → Success, reboot
+2. OTA upload without authentication → 401 Unauthorized
+3. OTA upload with invalid firmware → Error, no reboot
+4. LED initialization → Blue slow flash
+5. Camera init success → Green steady
+6. Camera init failure → Red slow flash
+7. SD card init success → No LED change (remains green)
+8. SD card init failure → Red fast flash
+9. Photo capture → Blue fast flash, then return to previous status
+10. Multiple status changes → LED updates correctly
+
+---
+
 ### 2026-02-03 - Optimized SD Card Space Management Logic
 **Updates:**
 - Implemented dynamic space threshold detection (total capacity - 5GB)
