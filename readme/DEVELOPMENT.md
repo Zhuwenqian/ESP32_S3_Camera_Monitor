@@ -839,8 +839,23 @@ ArduinoJson
 ### 13.3 Upgrade Instructions
 
 1. Download new firmware version
-2. Upload new firmware to ESP32-S3-CAM
-3. Test all functions
+2. Upload new firmware to ESP32-S3-CAM via OTA
+3. Device will automatically reboot after successful update
+4. Test all functions
+
+#### OTA Upgrade Process
+- Access the device web interface
+- Navigate to the OTA upgrade page
+- Select the firmware.bin file
+- Click upload
+- Wait for the upload and verification to complete
+- Device will automatically reboot
+
+#### OTA Upgrade Requirements
+- Device must be connected to WiFi
+- User must be authenticated
+- Sufficient free space in flash memory
+- Stable network connection during upload
 
 ---
 
@@ -1728,8 +1743,23 @@ ArduinoJson
 ### 13.3 升级说明
 
 1. 下载新版本固件
-2. 上传新固件到ESP32-S3-CAM
-3. 测试各项功能
+2. 通过OTA上传新固件到ESP32-S3-CAM
+3. 更新成功后设备会自动重启
+4. 测试各项功能
+
+#### OTA升级流程
+- 访问设备Web界面
+- 进入OTA升级页面
+- 选择firmware.bin文件
+- 点击上传
+- 等待上传和验证完成
+- 设备会自动重启
+
+#### OTA升级要求
+- 设备必须连接WiFi
+- 用户必须已认证
+- flash内存必须有足够的空闲空间
+- 上传期间网络连接必须稳定
 
 ---
 
