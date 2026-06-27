@@ -16,7 +16,7 @@
                 11. HTTP Basic Authentication认证 / HTTP Basic Authentication
                 12. OTA升级功能 / OTA upgrade function
                 13. WS2812B LED状态指示 / WS2812B LED status indication
-  Auther      : ESP32-S3监控项目 / ESP32-S3 Monitoring Project
+  Auther      : Zhu Wenqian
   Modification: 2026-02-04
   
   代码来源 / Code Source:
